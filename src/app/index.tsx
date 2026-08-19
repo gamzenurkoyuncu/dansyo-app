@@ -1,5 +1,6 @@
 import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { Link } from 'expo-router';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AnimatedIcon } from '@/components/animated-icon';
@@ -55,6 +56,25 @@ export default function HomeScreen() {
           />
         </ThemedView>
 
+        <Link href="/teams" asChild>
+          <Pressable style={({ pressed }) => [styles.teamsLinkPressable, pressed && styles.pressed]}>
+            <ThemedView type="backgroundElement" style={styles.teamsLink}>
+              <View style={styles.teamsLinkIcon}>
+                <ThemedText style={styles.teamsLinkEmoji}>💃</ThemedText>
+              </View>
+              <View style={styles.teamsLinkText}>
+                <ThemedText type="default" style={styles.teamsLinkTitle}>
+                  Ekip Listesi
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Ekipleri görüntüle, düzenle
+                </ThemedText>
+              </View>
+              <ThemedText themeColor="textSecondary">›</ThemedText>
+            </ThemedView>
+          </Pressable>
+        </Link>
+
         {Platform.OS === 'web' && <WebBadge />}
       </SafeAreaView>
     </ThemedView>
@@ -94,5 +114,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.four,
     borderRadius: Spacing.four,
+  },
+  teamsLinkPressable: {
+    alignSelf: 'stretch',
+  },
+  teamsLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  teamsLinkIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(60,135,247,0.16)',
+  },
+  teamsLinkEmoji: {
+    fontSize: 20,
+  },
+  teamsLinkText: {
+    flex: 1,
+    gap: Spacing.half,
+  },
+  teamsLinkTitle: {
+    fontWeight: '700',
+  },
+  pressed: {
+    opacity: 0.7,
   },
 });
