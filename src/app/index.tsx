@@ -1,5 +1,5 @@
 import * as Device from 'expo-device';
-import { Link } from 'expo-router';
+import { Href, Link } from 'expo-router';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,6 +26,36 @@ function getDevMenuHint() {
     <ThemedText type="small">
       press <ThemedText type="code">{shortcut}</ThemedText>
     </ThemedText>
+  );
+}
+
+type QuickLinkCardProps = {
+  href: Href;
+  emoji: string;
+  title: string;
+  subtitle: string;
+};
+
+function QuickLinkCard({ href, emoji, title, subtitle }: QuickLinkCardProps) {
+  return (
+    <Link href={href} asChild>
+      <Pressable style={({ pressed }) => [styles.quickLinkPressable, pressed && styles.pressed]}>
+        <ThemedView type="backgroundElement" style={styles.quickLink}>
+          <View style={styles.quickLinkIcon}>
+            <ThemedText style={styles.quickLinkEmoji}>{emoji}</ThemedText>
+          </View>
+          <View style={styles.quickLinkText}>
+            <ThemedText type="default" style={styles.quickLinkTitle}>
+              {title}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {subtitle}
+            </ThemedText>
+          </View>
+          <ThemedText themeColor="textSecondary">›</ThemedText>
+        </ThemedView>
+      </Pressable>
+    </Link>
   );
 }
 
@@ -56,24 +86,19 @@ export default function HomeScreen() {
           />
         </ThemedView>
 
-        <Link href="/teams" asChild>
-          <Pressable style={({ pressed }) => [styles.teamsLinkPressable, pressed && styles.pressed]}>
-            <ThemedView type="backgroundElement" style={styles.teamsLink}>
-              <View style={styles.teamsLinkIcon}>
-                <ThemedText style={styles.teamsLinkEmoji}>💃</ThemedText>
-              </View>
-              <View style={styles.teamsLinkText}>
-                <ThemedText type="default" style={styles.teamsLinkTitle}>
-                  Ekip Listesi
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Ekipleri görüntüle, düzenle
-                </ThemedText>
-              </View>
-              <ThemedText themeColor="textSecondary">›</ThemedText>
-            </ThemedView>
-          </Pressable>
-        </Link>
+        <QuickLinkCard
+          href="/teams"
+          emoji="💃"
+          title="Ekip Listesi"
+          subtitle="Ekipleri görüntüle, düzenle"
+        />
+
+        <QuickLinkCard
+          href="/dancers"
+          emoji="🧑‍🤝‍🧑"
+          title="Dansçılar"
+          subtitle="Dansçıları görüntüle, ekle"
+        />
 
         {Platform.OS === 'web' && <WebBadge />}
       </SafeAreaView>
@@ -115,10 +140,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.four,
     borderRadius: Spacing.four,
   },
-  teamsLinkPressable: {
+  quickLinkPressable: {
     alignSelf: 'stretch',
   },
-  teamsLink: {
+  quickLink: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'stretch',
@@ -127,7 +152,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.three,
     borderRadius: Spacing.four,
   },
-  teamsLinkIcon: {
+  quickLinkIcon: {
     width: 44,
     height: 44,
     borderRadius: 22,
@@ -135,14 +160,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'rgba(60,135,247,0.16)',
   },
-  teamsLinkEmoji: {
+  quickLinkEmoji: {
     fontSize: 20,
   },
-  teamsLinkText: {
+  quickLinkText: {
     flex: 1,
     gap: Spacing.half,
   },
-  teamsLinkTitle: {
+  quickLinkTitle: {
     fontWeight: '700',
   },
   pressed: {
