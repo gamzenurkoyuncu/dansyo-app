@@ -17,6 +17,7 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import {
   CURRENT_SEASON,
+  getAvailableSeasons,
   getRegionForSeason,
   initialSeasonRegions,
   initialTeams,
@@ -38,6 +39,8 @@ export default function TeamsScreen() {
 
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [seasonRegions, setSeasonRegions] = useState<SeasonRegion[]>(initialSeasonRegions);
+  const [selectedSeason, setSelectedSeason] = useState(CURRENT_SEASON);
+  const [isSeasonPickerVisible, setSeasonPickerVisible] = useState(false);
 
   const [isFormVisible, setFormVisible] = useState(false);
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
@@ -47,6 +50,7 @@ export default function TeamsScreen() {
 
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
 
+  const availableSeasons = getAvailableSeasons(seasonRegions);
   const canSubmit = nameInput.trim().length > 0 && regionInput.trim().length > 0;
   const formAccent = editingTeamId ? getAccentColor(editingTeamId) : PRIMARY_COLOR;
 
@@ -62,7 +66,7 @@ export default function TeamsScreen() {
     setEditingTeamId(team.id);
     setNameInput(team.name);
     setDancerCountInput(String(team.dancerCount));
-    setRegionInput(getRegionForSeason(seasonRegions, team.id) ?? '');
+    setRegionInput(getRegionForSeason(seasonRegions, team.id, selectedSeason) ?? '');
     setFormVisible(true);
   }
 
@@ -78,19 +82,19 @@ export default function TeamsScreen() {
         ),
       );
       setSeasonRegions((prev) => {
-        const hasCurrentSeasonRecord = prev.some(
-          (region) => region.teamId === editingTeamId && region.season === CURRENT_SEASON,
+        const hasSeasonRecord = prev.some(
+          (region) => region.teamId === editingTeamId && region.season === selectedSeason,
         );
-        if (hasCurrentSeasonRecord) {
+        if (hasSeasonRecord) {
           return prev.map((region) =>
-            region.teamId === editingTeamId && region.season === CURRENT_SEASON
+            region.teamId === editingTeamId && region.season === selectedSeason
               ? { ...region, regionName: regionInput.trim() }
               : region,
           );
         }
         return [
           ...prev,
-          { teamId: editingTeamId, season: CURRENT_SEASON, regionName: regionInput.trim() },
+          { teamId: editingTeamId, season: selectedSeason, regionName: regionInput.trim() },
         ];
       });
     } else {
@@ -102,7 +106,7 @@ export default function TeamsScreen() {
       setTeams((prev) => [...prev, newTeam]);
       setSeasonRegions((prev) => [
         ...prev,
-        { teamId: newTeam.id, season: CURRENT_SEASON, regionName: regionInput.trim() },
+        { teamId: newTeam.id, season: selectedSeason, regionName: regionInput.trim() },
       ]);
     }
 
@@ -144,9 +148,15 @@ export default function TeamsScreen() {
           <View style={styles.header}>
             <View style={styles.headerText}>
               <ThemedText type="subtitle">Ekip Listesi</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {teams.length} ekip · {CURRENT_SEASON} sezonu
-              </ThemedText>
+              <Pressable
+                style={({ pressed }) => pressed && styles.pressed}
+                onPress={() => setSeasonPickerVisible(true)}>
+                <View style={styles.seasonChip}>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {teams.length} ekip · {selectedSeason} sezonu ⌄
+                  </ThemedText>
+                </View>
+              </Pressable>
             </View>
 
             <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={openAddForm}>
@@ -161,7 +171,7 @@ export default function TeamsScreen() {
               <TeamCard
                 key={team.id}
                 team={team}
-                regionName={getRegionForSeason(seasonRegions, team.id)}
+                regionName={getRegionForSeason(seasonRegions, team.id, selectedSeason)}
                 onEdit={() => openEditForm(team)}
                 onDelete={() => setDeletingTeam(team)}
               />
@@ -169,6 +179,43 @@ export default function TeamsScreen() {
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={isSeasonPickerVisible}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setSeasonPickerVisible(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setSeasonPickerVisible(false)}>
+          <ThemedView type="backgroundElement" style={styles.seasonModalCard}>
+            <ThemedText type="subtitle" style={styles.seasonModalTitle}>
+              Sezon Seç
+            </ThemedText>
+            {availableSeasons.map((season) => (
+              <Pressable
+                key={season}
+                style={({ pressed }) => pressed && styles.pressed}
+                onPress={() => {
+                  setSelectedSeason(season);
+                  setSeasonPickerVisible(false);
+                }}>
+                <View
+                  style={[
+                    styles.seasonOption,
+                    season === selectedSeason && styles.seasonOptionSelected,
+                  ]}>
+                  <ThemedText
+                    style={season === selectedSeason ? styles.seasonOptionSelectedText : undefined}>
+                    {season}
+                  </ThemedText>
+                  {season === selectedSeason && (
+                    <ThemedText style={styles.seasonOptionSelectedText}>✓</ThemedText>
+                  )}
+                </View>
+              </Pressable>
+            ))}
+          </ThemedView>
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={isFormVisible}
@@ -226,7 +273,7 @@ export default function TeamsScreen() {
 
             <View style={styles.field}>
               <ThemedText type="small" themeColor="textSecondary">
-                📍 Bu Sezonki Yöre ({CURRENT_SEASON})
+                📍 {selectedSeason} Sezonu Yöresi
               </ThemedText>
               <TextInput
                 value={regionInput}
@@ -318,6 +365,9 @@ const styles = StyleSheet.create({
   headerText: {
     gap: Spacing.half,
   },
+  seasonChip: {
+    alignSelf: 'flex-start',
+  },
   addButton: {
     backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.three,
@@ -341,6 +391,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.4)',
     paddingHorizontal: Spacing.four,
+  },
+  seasonModalCard: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+    gap: Spacing.half,
+  },
+  seasonModalTitle: {
+    paddingHorizontal: Spacing.two,
+    paddingBottom: Spacing.two,
+  },
+  seasonOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.two,
+  },
+  seasonOptionSelected: {
+    backgroundColor: PRIMARY_COLOR + '20',
+  },
+  seasonOptionSelectedText: {
+    color: PRIMARY_COLOR,
+    fontWeight: '700',
   },
   modalCard: {
     width: '100%',
