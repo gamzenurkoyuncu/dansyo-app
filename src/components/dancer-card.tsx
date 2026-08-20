@@ -12,6 +12,7 @@ type DancerCardProps = {
   onEdit?: () => void;
   onDelete?: () => void;
   onViewAttendance?: () => void;
+  onViewPayments?: () => void;
 };
 
 export function DancerCard({
@@ -20,6 +21,7 @@ export function DancerCard({
   onEdit,
   onDelete,
   onViewAttendance,
+  onViewPayments,
 }: DancerCardProps) {
   const accent = getAccentColor(dancer.id);
   const age = getAge(dancer.birthDate);
@@ -48,7 +50,7 @@ export function DancerCard({
         )}
       </View>
 
-      {(onViewAttendance || onEdit || onDelete) && (
+      {(onViewAttendance || onViewPayments || onEdit || onDelete) && (
         <View style={styles.actions}>
           {onViewAttendance && (
             <Pressable
@@ -56,6 +58,14 @@ export function DancerCard({
               style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
               onPress={onViewAttendance}>
               <ThemedText style={styles.iconGlyph}>🕐</ThemedText>
+            </Pressable>
+          )}
+          {onViewPayments && (
+            <Pressable
+              hitSlop={8}
+              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+              onPress={onViewPayments}>
+              <ThemedText style={styles.iconGlyph}>💰</ThemedText>
             </Pressable>
           )}
           {onEdit && (

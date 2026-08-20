@@ -16,6 +16,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { Dancer, formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
+import { formatTurkishMonth, getPaymentsForDancer } from '@/data/mock-payments';
 import { getAttendanceForDancer, getAttendanceSummary, getTeamForDancer } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
@@ -32,21 +33,36 @@ export default function DancersScreen() {
   };
   const theme = useTheme();
 
-  const { dancers, setDancers, teams, assignments, setAssignments, currentSeason, attendanceRecords } =
-    useAppData();
+  const {
+    dancers,
+    setDancers,
+    teams,
+    assignments,
+    setAssignments,
+    currentSeason,
+    attendanceRecords,
+    paymentRecords,
+  } = useAppData();
   const [isFormVisible, setFormVisible] = useState(false);
   const [editingDancerId, setEditingDancerId] = useState<string | null>(null);
   const [firstNameInput, setFirstNameInput] = useState('');
   const [lastNameInput, setLastNameInput] = useState('');
   const [birthDateInput, setBirthDateInput] = useState('');
   const [schoolInput, setSchoolInput] = useState('');
+  const [feeInput, setFeeInput] = useState('');
 
   const [deletingDancer, setDeletingDancer] = useState<Dancer | null>(null);
   const [historyDancer, setHistoryDancer] = useState<Dancer | null>(null);
+  const [paymentsDancer, setPaymentsDancer] = useState<Dancer | null>(null);
 
   const parsedBirthDate = parseTurkishDate(birthDateInput);
+  const parsedFee = Number(feeInput);
+  const isFeeValid = feeInput.trim().length > 0 && Number.isFinite(parsedFee) && parsedFee >= 0;
   const canSubmit =
-    firstNameInput.trim().length > 0 && lastNameInput.trim().length > 0 && parsedBirthDate !== null;
+    firstNameInput.trim().length > 0 &&
+    lastNameInput.trim().length > 0 &&
+    parsedBirthDate !== null &&
+    isFeeValid;
 
   function openAddForm() {
     setEditingDancerId(null);
@@ -54,6 +70,7 @@ export default function DancersScreen() {
     setLastNameInput('');
     setBirthDateInput('');
     setSchoolInput('');
+    setFeeInput('');
     setFormVisible(true);
   }
 
@@ -63,6 +80,7 @@ export default function DancersScreen() {
     setLastNameInput(dancer.lastName);
     setBirthDateInput(formatTurkishDate(dancer.birthDate));
     setSchoolInput(dancer.school);
+    setFeeInput(String(dancer.monthlyFee));
     setFormVisible(true);
   }
 
@@ -83,6 +101,7 @@ export default function DancersScreen() {
                 lastName: lastNameInput.trim(),
                 birthDate: parsedBirthDate,
                 school: schoolInput.trim(),
+                monthlyFee: parsedFee,
               }
             : dancer,
         ),
@@ -94,6 +113,7 @@ export default function DancersScreen() {
         lastName: lastNameInput.trim(),
         birthDate: parsedBirthDate,
         school: schoolInput.trim(),
+        monthlyFee: parsedFee,
       };
       setDancers((prev) => [...prev, newDancer]);
     }
@@ -153,6 +173,7 @@ export default function DancersScreen() {
                 onEdit={() => openEditForm(dancer)}
                 onDelete={() => setDeletingDancer(dancer)}
                 onViewAttendance={() => setHistoryDancer(dancer)}
+                onViewPayments={() => setPaymentsDancer(dancer)}
               />
             ))}
           </View>
@@ -244,6 +265,25 @@ export default function DancersScreen() {
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
               />
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                💰 Aylık Ücret (₺)
+              </ThemedText>
+              <TextInput
+                value={feeInput}
+                onChangeText={setFeeInput}
+                placeholder="örn. 800"
+                keyboardType="numeric"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              />
+              {feeInput.length > 0 && !isFeeValid && (
+                <ThemedText type="small" style={styles.errorText}>
+                  Geçerli bir tutar gir
+                </ThemedText>
+              )}
             </View>
 
             <Pressable
@@ -360,6 +400,63 @@ export default function DancersScreen() {
             <Pressable
               style={({ pressed }) => pressed && styles.pressed}
               onPress={() => setHistoryDancer(null)}>
+              <View style={[styles.primaryButton, styles.primaryButtonFull]}>
+                <ThemedText style={styles.primaryButtonText}>Kapat</ThemedText>
+              </View>
+            </Pressable>
+          </ThemedView>
+        </ThemedView>
+      </Modal>
+
+      <Modal
+        visible={paymentsDancer !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setPaymentsDancer(null)}>
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView type="backgroundElement" style={styles.modalCard}>
+            <View style={styles.formHeader}>
+              <View style={styles.formIcon}>
+                <ThemedText style={styles.formIconGlyph}>💰</ThemedText>
+              </View>
+              <View style={styles.formHeaderText}>
+                <ThemedText type="subtitle">
+                  {paymentsDancer?.firstName} {paymentsDancer?.lastName}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Ödeme geçmişi
+                </ThemedText>
+              </View>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+                onPress={() => setPaymentsDancer(null)}>
+                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.attendanceList}>
+              {!paymentsDancer || getPaymentsForDancer(paymentRecords, paymentsDancer.id).length === 0 ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Henüz ödeme kaydı yok.
+                </ThemedText>
+              ) : (
+                getPaymentsForDancer(paymentRecords, paymentsDancer.id).map((record) => (
+                  <View key={record.id} style={styles.attendanceRow}>
+                    <ThemedText>{formatTurkishMonth(record.month)}</ThemedText>
+                    <ThemedText
+                      type="small"
+                      style={record.paid ? styles.successText : styles.errorText}>
+                      {record.paid ? 'Ödendi' : 'Ödenmedi'}
+                    </ThemedText>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            <Pressable
+              style={({ pressed }) => pressed && styles.pressed}
+              onPress={() => setPaymentsDancer(null)}>
               <View style={[styles.primaryButton, styles.primaryButtonFull]}>
                 <ThemedText style={styles.primaryButtonText}>Kapat</ThemedText>
               </View>

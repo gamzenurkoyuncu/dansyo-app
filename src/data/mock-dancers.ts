@@ -4,13 +4,35 @@ export type Dancer = {
   lastName: string;
   birthDate: string; // ISO date, e.g. '2015-04-12'
   school: string;
+  monthlyFee: number;
 };
 
 export const initialDancers: Dancer[] = [
-  { id: '1', firstName: 'Ela', lastName: 'Yıldız', birthDate: '2016-03-14', school: 'Atatürk İlkokulu' },
-  { id: '2', firstName: 'Kerem', lastName: 'Demir', birthDate: '2013-07-22', school: 'Cumhuriyet Ortaokulu' },
-  { id: '3', firstName: 'Zeynep', lastName: 'Kaya', birthDate: '2010-11-05', school: 'Fatih Lisesi' },
-  { id: '4', firstName: 'Mert', lastName: 'Şahin', birthDate: '2005-01-30', school: '-' },
+  {
+    id: '1',
+    firstName: 'Ela',
+    lastName: 'Yıldız',
+    birthDate: '2016-03-14',
+    school: 'Atatürk İlkokulu',
+    monthlyFee: 800,
+  },
+  {
+    id: '2',
+    firstName: 'Kerem',
+    lastName: 'Demir',
+    birthDate: '2013-07-22',
+    school: 'Cumhuriyet Ortaokulu',
+    monthlyFee: 800,
+  },
+  {
+    id: '3',
+    firstName: 'Zeynep',
+    lastName: 'Kaya',
+    birthDate: '2010-11-05',
+    school: 'Fatih Lisesi',
+    monthlyFee: 900,
+  },
+  { id: '4', firstName: 'Mert', lastName: 'Şahin', birthDate: '2005-01-30', school: '-', monthlyFee: 1000 },
 ];
 
 export function getAge(birthDate: string): number | null {

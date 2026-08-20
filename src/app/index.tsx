@@ -122,6 +122,8 @@ export default function HomeScreen() {
 
           <QuickLinkCard href="/attendance" emoji="✅" title="Yoklama" subtitle="Yoklama al" />
 
+          <QuickLinkCard href="/payments" emoji="💰" title="Aidat" subtitle="Ödemeleri takip et" />
+
           <QuickLinkCard href="/settings" emoji="⚙️" title="Ayarlar" subtitle="Görünüm tercihleri" />
         </View>
       </View>
