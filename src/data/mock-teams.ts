@@ -1,7 +1,6 @@
 export type Team = {
   id: string;
   name: string;
-  dancerCount: number;
 };
 
 export type SeasonRegion = {
@@ -21,10 +20,10 @@ export const PREVIOUS_SEASON = '2024-2025';
 export const NEXT_SEASON = '2026-2027';
 
 export const initialTeams: Team[] = [
-  { id: '1', name: '7-9 Yaş', dancerCount: 12 },
-  { id: '2', name: '10-13 Yaş', dancerCount: 18 },
-  { id: '3', name: '14-17 Yaş', dancerCount: 9 },
-  { id: '4', name: 'Yetişkinler', dancerCount: 15 },
+  { id: '1', name: '7-9 Yaş' },
+  { id: '2', name: '10-13 Yaş' },
+  { id: '3', name: '14-17 Yaş' },
+  { id: '4', name: 'Yetişkinler' },
 ];
 
 export const initialSeasonRegions: SeasonRegion[] = [
@@ -69,6 +68,14 @@ export function getAssignedDancerIds(
   return assignments
     .filter((assignment) => assignment.teamId === teamId && assignment.season === season)
     .map((assignment) => assignment.dancerId);
+}
+
+export function getTeamDancerCount(
+  assignments: TeamAssignment[],
+  teamId: string,
+  season: string,
+): number {
+  return getAssignedDancerIds(assignments, teamId, season).length;
 }
 
 export function assignDancerToTeam(

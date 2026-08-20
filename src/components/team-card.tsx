@@ -8,6 +8,7 @@ import { Team } from '@/data/mock-teams';
 type TeamCardProps = {
   team: Team;
   regionName?: string;
+  dancerCount: number;
   onEdit?: () => void;
   onDelete?: () => void;
   onAssignDancers?: () => void;
@@ -20,7 +21,14 @@ export function getAccentColor(id: string) {
   return ACCENT_PALETTE[sum % ACCENT_PALETTE.length];
 }
 
-export function TeamCard({ team, regionName, onEdit, onDelete, onAssignDancers }: TeamCardProps) {
+export function TeamCard({
+  team,
+  regionName,
+  dancerCount,
+  onEdit,
+  onDelete,
+  onAssignDancers,
+}: TeamCardProps) {
   const accent = getAccentColor(team.id);
 
   return (
@@ -75,7 +83,7 @@ export function TeamCard({ team, regionName, onEdit, onDelete, onAssignDancers }
           </View>
 
           <ThemedText type="small" themeColor="textSecondary">
-            👥 {team.dancerCount} dansçı
+            👥 {dancerCount} dansçı
           </ThemedText>
         </View>
       </View>

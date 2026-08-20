@@ -21,6 +21,7 @@ import {
   getAssignedDancerIds,
   getAvailableSeasons,
   getRegionForSeason,
+  getTeamDancerCount,
   getTeamForDancer,
   Team,
   unassignDancer,
@@ -47,7 +48,6 @@ export default function TeamsScreen() {
   const [isFormVisible, setFormVisible] = useState(false);
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [nameInput, setNameInput] = useState('');
-  const [dancerCountInput, setDancerCountInput] = useState('');
   const [regionInput, setRegionInput] = useState('');
 
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
@@ -75,7 +75,6 @@ export default function TeamsScreen() {
   function openAddForm() {
     setEditingTeamId(null);
     setNameInput('');
-    setDancerCountInput('');
     setRegionInput('');
     setFormVisible(true);
   }
@@ -83,7 +82,6 @@ export default function TeamsScreen() {
   function openEditForm(team: Team) {
     setEditingTeamId(team.id);
     setNameInput(team.name);
-    setDancerCountInput(String(team.dancerCount));
     setRegionInput(getRegionForSeason(seasonRegions, team.id, selectedSeason) ?? '');
     setFormVisible(true);
   }
@@ -91,13 +89,9 @@ export default function TeamsScreen() {
   function handleSaveTeam() {
     if (!canSubmit) return;
 
-    const dancerCount = Number.parseInt(dancerCountInput, 10) || 0;
-
     if (editingTeamId) {
       setTeams((prev) =>
-        prev.map((team) =>
-          team.id === editingTeamId ? { ...team, name: nameInput.trim(), dancerCount } : team,
-        ),
+        prev.map((team) => (team.id === editingTeamId ? { ...team, name: nameInput.trim() } : team)),
       );
       setSeasonRegions((prev) => {
         const hasSeasonRecord = prev.some(
@@ -119,7 +113,6 @@ export default function TeamsScreen() {
       const newTeam: Team = {
         id: Date.now().toString(),
         name: nameInput.trim(),
-        dancerCount,
       };
       setTeams((prev) => [...prev, newTeam]);
       setSeasonRegions((prev) => [
@@ -191,6 +184,7 @@ export default function TeamsScreen() {
                 key={team.id}
                 team={team}
                 regionName={getRegionForSeason(seasonRegions, team.id, selectedSeason)}
+                dancerCount={getTeamDancerCount(assignments, team.id, selectedSeason)}
                 onEdit={() => openEditForm(team)}
                 onDelete={() => setDeletingTeam(team)}
                 onAssignDancers={() => setAssigningTeam(team)}
@@ -272,20 +266,6 @@ export default function TeamsScreen() {
                 value={nameInput}
                 onChangeText={setNameInput}
                 placeholder="örn. 7-9 Yaş"
-                placeholderTextColor={theme.textSecondary}
-                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-              />
-            </View>
-
-            <View style={styles.field}>
-              <ThemedText type="small" themeColor="textSecondary">
-                👥 Dansçı Sayısı
-              </ThemedText>
-              <TextInput
-                value={dancerCountInput}
-                onChangeText={setDancerCountInput}
-                placeholder="örn. 12"
-                keyboardType="number-pad"
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
               />
