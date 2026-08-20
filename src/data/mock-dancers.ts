@@ -87,6 +87,22 @@ export function parseTurkishDate(input: string): string | null {
   return `${year}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 }
 
+export function addDaysToISO(isoDate: string, days: number): string {
+  const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return isoDate;
+
+  const [, year, month, day] = match;
+  // Constructed from local date parts (no toISOString) so day arithmetic
+  // stays in local time and doesn't drift by a day near midnight.
+  const date = new Date(Number(year), Number(month) - 1, Number(day));
+  date.setDate(date.getDate() + days);
+
+  const newYear = date.getFullYear();
+  const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+  const newDay = String(date.getDate()).padStart(2, '0');
+  return `${newYear}-${newMonth}-${newDay}`;
+}
+
 export function formatTurkishDate(isoDate: string): string {
   const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!match) return isoDate;

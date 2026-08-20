@@ -6,7 +6,7 @@ import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
+import { addDaysToISO, formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
 import { getAssignedDancerIds, getAttendanceStatus, setAttendance } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
@@ -14,6 +14,12 @@ import { useTheme } from '@/hooks/use-theme';
 const PRIMARY_COLOR = '#3c87f7';
 const SUCCESS_COLOR = '#27ae60';
 const DANGER_COLOR = '#e05252';
+
+const QUICK_DATE_OFFSETS: { label: string; offset: number }[] = [
+  { label: 'Bugün', offset: 0 },
+  { label: 'Dün', offset: -1 },
+  { label: 'Geçen hafta bu gün', offset: -7 },
+];
 
 function todayISO() {
   // Built from local date parts (no toISOString) so it reflects the
@@ -103,6 +109,25 @@ export default function AttendanceScreen() {
             placeholderTextColor={theme.textSecondary}
             style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
           />
+          <View style={styles.quickDateRow}>
+            {QUICK_DATE_OFFSETS.map(({ label, offset }) => {
+              const optionDate = addDaysToISO(todayISO(), offset);
+              const isSelected = parsedDate === optionDate;
+              return (
+                <Pressable
+                  key={label}
+                  onPress={() => setDateInput(formatTurkishDate(optionDate))}>
+                  <View style={[styles.quickDateChip, isSelected && styles.quickDateChipSelected]}>
+                    <ThemedText
+                      type="small"
+                      style={isSelected ? styles.quickDateChipSelectedText : undefined}>
+                      {label}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
           {dateInput.trim().length > 0 && !parsedDate && (
             <ThemedText type="small" style={styles.errorText}>
               Geçerli bir tarih gir (gg.aa.yyyy)
@@ -238,6 +263,24 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: SUCCESS_COLOR,
+  },
+  quickDateRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+  },
+  quickDateChip: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.five,
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  quickDateChipSelected: {
+    backgroundColor: PRIMARY_COLOR,
+  },
+  quickDateChipSelectedText: {
+    color: '#ffffff',
+    fontWeight: '700',
   },
   teamChipRow: {
     flexDirection: 'row',
