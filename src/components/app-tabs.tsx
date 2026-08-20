@@ -1,11 +1,11 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+import { useResolvedColorScheme } from '@/hooks/use-resolved-color-scheme';
 
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const scheme = useResolvedColorScheme();
+  const colors = Colors[scheme];
 
   return (
     <NativeTabs
@@ -41,6 +41,11 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="attendance">
         <NativeTabs.Trigger.Label>Yoklama</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="checkmark.circle.fill" />
+      </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="settings">
+        <NativeTabs.Trigger.Label>Ayarlar</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="gearshape.fill" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

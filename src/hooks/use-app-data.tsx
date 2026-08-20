@@ -16,7 +16,11 @@ import {
   TeamAssignment,
 } from '@/data/mock-teams';
 
+export type ThemePreference = 'light' | 'dark' | 'system';
+
 type AppDataContextValue = {
+  themePreference: ThemePreference;
+  setThemePreference: Dispatch<SetStateAction<ThemePreference>>;
   teams: Team[];
   setTeams: Dispatch<SetStateAction<Team[]>>;
   seasonRegions: SeasonRegion[];
@@ -38,6 +42,7 @@ type AppDataContextValue = {
 const AppDataContext = createContext<AppDataContextValue | null>(null);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
+  const [themePreference, setThemePreference] = useState<ThemePreference>('system');
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [seasonRegions, setSeasonRegions] = useState<SeasonRegion[]>(initialSeasonRegions);
   const [dancers, setDancers] = useState<Dancer[]>(initialDancers);
@@ -51,6 +56,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   return (
     <AppDataContext
       value={{
+        themePreference,
+        setThemePreference,
         teams,
         setTeams,
         seasonRegions,
