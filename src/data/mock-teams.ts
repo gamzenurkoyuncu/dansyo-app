@@ -15,6 +15,44 @@ export type TeamAssignment = {
   season: string;
 };
 
+export type DayOfWeek =
+  | 'Pazartesi'
+  | 'Salı'
+  | 'Çarşamba'
+  | 'Perşembe'
+  | 'Cuma'
+  | 'Cumartesi'
+  | 'Pazar';
+
+export const DAYS_OF_WEEK: DayOfWeek[] = [
+  'Pazartesi',
+  'Salı',
+  'Çarşamba',
+  'Perşembe',
+  'Cuma',
+  'Cumartesi',
+  'Pazar',
+];
+
+export const DAY_ABBREVIATIONS: Record<DayOfWeek, string> = {
+  Pazartesi: 'Pzt',
+  Salı: 'Sal',
+  Çarşamba: 'Çar',
+  Perşembe: 'Per',
+  Cuma: 'Cum',
+  Cumartesi: 'Cmt',
+  Pazar: 'Paz',
+};
+
+export type PracticeSlot = {
+  id: string;
+  teamId: string;
+  season: string;
+  day: DayOfWeek;
+  startTime: string;
+  endTime: string;
+};
+
 export const CURRENT_SEASON = '2025-2026';
 export const PREVIOUS_SEASON = '2024-2025';
 export const NEXT_SEASON = '2026-2027';
@@ -45,6 +83,35 @@ export const initialTeamAssignments: TeamAssignment[] = [
   { dancerId: '2', teamId: '2', season: CURRENT_SEASON },
   { dancerId: '3', teamId: '3', season: CURRENT_SEASON },
   { dancerId: '4', teamId: '4', season: CURRENT_SEASON },
+];
+
+export const initialPracticeSlots: PracticeSlot[] = [
+  { id: 'ps1', teamId: '1', season: CURRENT_SEASON, day: 'Salı', startTime: '18:00', endTime: '19:00' },
+  {
+    id: 'ps2',
+    teamId: '2',
+    season: CURRENT_SEASON,
+    day: 'Pazartesi',
+    startTime: '18:00',
+    endTime: '19:30',
+  },
+  {
+    id: 'ps3',
+    teamId: '2',
+    season: CURRENT_SEASON,
+    day: 'Perşembe',
+    startTime: '18:00',
+    endTime: '19:30',
+  },
+  {
+    id: 'ps4',
+    teamId: '3',
+    season: CURRENT_SEASON,
+    day: 'Çarşamba',
+    startTime: '19:00',
+    endTime: '20:30',
+  },
+  { id: 'ps5', teamId: '4', season: CURRENT_SEASON, day: 'Cuma', startTime: '20:00', endTime: '21:30' },
 ];
 
 export function getRegionForSeason(
@@ -121,4 +188,22 @@ export function getTeamForDancer(
   );
   if (!assignment) return undefined;
   return teams.find((team) => team.id === assignment.teamId);
+}
+
+export function getPracticeSlotsForTeam(
+  slots: PracticeSlot[],
+  teamId: string,
+  season: string,
+): PracticeSlot[] {
+  return slots
+    .filter((slot) => slot.teamId === teamId && slot.season === season)
+    .sort((a, b) => DAYS_OF_WEEK.indexOf(a.day) - DAYS_OF_WEEK.indexOf(b.day));
+}
+
+export function formatPracticeSlot(slot: PracticeSlot): string {
+  return `${slot.day} ${slot.startTime}-${slot.endTime}`;
+}
+
+export function isValidTime(value: string): boolean {
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value.trim());
 }

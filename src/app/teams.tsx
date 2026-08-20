@@ -17,12 +17,18 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import {
   assignDancerToTeam,
+  DAY_ABBREVIATIONS,
+  DAYS_OF_WEEK,
+  DayOfWeek,
+  formatPracticeSlot,
   getAssignedDancerIds,
   getAvailableSeasons,
   getNextSeasonLabel,
+  getPracticeSlotsForTeam,
   getRegionForSeason,
   getTeamDancerCount,
   getTeamForDancer,
+  isValidTime,
   Team,
   unassignDancer,
 } from '@/data/mock-teams';
@@ -52,6 +58,8 @@ export default function TeamsScreen() {
     setSeasons,
     currentSeason,
     setCurrentSeason,
+    practiceSlots,
+    setPracticeSlots,
   } = useAppData();
   const [selectedSeason, setSelectedSeason] = useState(currentSeason);
   const [isSeasonPickerVisible, setSeasonPickerVisible] = useState(false);
@@ -62,6 +70,9 @@ export default function TeamsScreen() {
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [nameInput, setNameInput] = useState('');
   const [regionInput, setRegionInput] = useState('');
+  const [slotDrafts, setSlotDrafts] = useState<
+    { day: DayOfWeek; startTime: string; endTime: string }[]
+  >([]);
 
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
   const [assigningTeam, setAssigningTeam] = useState<Team | null>(null);
@@ -112,6 +123,7 @@ export default function TeamsScreen() {
     setEditingTeamId(null);
     setNameInput('');
     setRegionInput('');
+    setSlotDrafts([]);
     setFormVisible(true);
   }
 
@@ -119,11 +131,34 @@ export default function TeamsScreen() {
     setEditingTeamId(team.id);
     setNameInput(team.name);
     setRegionInput(getRegionForSeason(seasonRegions, team.id, selectedSeason) ?? '');
+    setSlotDrafts(
+      getPracticeSlotsForTeam(practiceSlots, team.id, selectedSeason).map((slot) => ({
+        day: slot.day,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+      })),
+    );
     setFormVisible(true);
+  }
+
+  function toggleSlotDay(day: DayOfWeek) {
+    setSlotDrafts((prev) =>
+      prev.some((slot) => slot.day === day)
+        ? prev.filter((slot) => slot.day !== day)
+        : [...prev, { day, startTime: '', endTime: '' }],
+    );
+  }
+
+  function updateSlotDraftTime(day: DayOfWeek, field: 'startTime' | 'endTime', value: string) {
+    setSlotDrafts((prev) =>
+      prev.map((slot) => (slot.day === day ? { ...slot, [field]: value } : slot)),
+    );
   }
 
   function handleSaveTeam() {
     if (!canSubmit) return;
+
+    const teamId = editingTeamId ?? Date.now().toString();
 
     if (editingTeamId) {
       setTeams((prev) =>
@@ -147,7 +182,7 @@ export default function TeamsScreen() {
       });
     } else {
       const newTeam: Team = {
-        id: Date.now().toString(),
+        id: teamId,
         name: nameInput.trim(),
       };
       setTeams((prev) => [...prev, newTeam]);
@@ -156,6 +191,23 @@ export default function TeamsScreen() {
         { teamId: newTeam.id, season: selectedSeason, regionName: regionInput.trim() },
       ]);
     }
+
+    setPracticeSlots((prev) => {
+      const withoutTeamSeason = prev.filter(
+        (slot) => !(slot.teamId === teamId && slot.season === selectedSeason),
+      );
+      const newSlots = slotDrafts
+        .filter((slot) => isValidTime(slot.startTime) && isValidTime(slot.endTime))
+        .map((slot) => ({
+          id: `${teamId}-${selectedSeason}-${slot.day}`,
+          teamId,
+          season: selectedSeason,
+          day: slot.day,
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+        }));
+      return [...withoutTeamSeason, ...newSlots];
+    });
 
     setFormVisible(false);
   }
@@ -170,6 +222,7 @@ export default function TeamsScreen() {
     setTeams((prev) => prev.filter((team) => team.id !== teamId));
     setSeasonRegions((prev) => prev.filter((region) => region.teamId !== teamId));
     setAssignments((prev) => prev.filter((assignment) => assignment.teamId !== teamId));
+    setPracticeSlots((prev) => prev.filter((slot) => slot.teamId !== teamId));
     setDeletingTeam(null);
   }
 
@@ -221,6 +274,9 @@ export default function TeamsScreen() {
                 team={team}
                 regionName={getRegionForSeason(seasonRegions, team.id, selectedSeason)}
                 dancerCount={getTeamDancerCount(assignments, team.id, selectedSeason)}
+                scheduleSummary={getPracticeSlotsForTeam(practiceSlots, team.id, selectedSeason)
+                  .map(formatPracticeSlot)
+                  .join(', ')}
                 onEdit={() => openEditForm(team)}
                 onDelete={() => setDeletingTeam(team)}
                 onAssignDancers={() => setAssigningTeam(team)}
@@ -399,6 +455,71 @@ export default function TeamsScreen() {
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
               />
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                🗓️ Çalışma Günleri ({selectedSeason})
+              </ThemedText>
+              <View style={styles.dayChipRow}>
+                {DAYS_OF_WEEK.map((day) => {
+                  const isSelected = slotDrafts.some((slot) => slot.day === day);
+                  return (
+                    <Pressable
+                      key={day}
+                      style={({ pressed }) => pressed && styles.pressed}
+                      onPress={() => toggleSlotDay(day)}>
+                      <View style={[styles.dayChip, isSelected && styles.dayChipSelected]}>
+                        <ThemedText
+                          type="small"
+                          style={isSelected ? styles.dayChipSelectedText : undefined}>
+                          {DAY_ABBREVIATIONS[day]}
+                        </ThemedText>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              {slotDrafts.map((slot) => (
+                <View key={slot.day} style={styles.slotTimeRow}>
+                  <ThemedText type="small" style={styles.slotDayLabel}>
+                    {slot.day}
+                  </ThemedText>
+                  <TextInput
+                    value={slot.startTime}
+                    onChangeText={(value) => updateSlotDraftTime(slot.day, 'startTime', value)}
+                    placeholder="18:00"
+                    placeholderTextColor={theme.textSecondary}
+                    style={[
+                      styles.input,
+                      styles.slotTimeInput,
+                      { color: theme.text, borderColor: theme.backgroundSelected },
+                    ]}
+                  />
+                  <ThemedText themeColor="textSecondary">–</ThemedText>
+                  <TextInput
+                    value={slot.endTime}
+                    onChangeText={(value) => updateSlotDraftTime(slot.day, 'endTime', value)}
+                    placeholder="19:30"
+                    placeholderTextColor={theme.textSecondary}
+                    style={[
+                      styles.input,
+                      styles.slotTimeInput,
+                      { color: theme.text, borderColor: theme.backgroundSelected },
+                    ]}
+                  />
+                </View>
+              ))}
+              {slotDrafts.some(
+                (slot) =>
+                  (slot.startTime.length > 0 && !isValidTime(slot.startTime)) ||
+                  (slot.endTime.length > 0 && !isValidTime(slot.endTime)),
+              ) && (
+                <ThemedText type="small" style={styles.errorText}>
+                  Saatleri sa:dk (örn. 18:00) formatında gir
+                </ThemedText>
+              )}
             </View>
 
             <Pressable
@@ -780,6 +901,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
+  },
+  dayChipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+  },
+  dayChip: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.five,
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  dayChipSelected: {
+    backgroundColor: PRIMARY_COLOR,
+  },
+  dayChipSelectedText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  slotTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  slotDayLabel: {
+    width: 88,
+  },
+  slotTimeInput: {
+    flex: 1,
   },
   modalActions: {
     flexDirection: 'row',

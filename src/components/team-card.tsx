@@ -9,6 +9,7 @@ type TeamCardProps = {
   team: Team;
   regionName?: string;
   dancerCount: number;
+  scheduleSummary?: string;
   onEdit?: () => void;
   onDelete?: () => void;
   onAssignDancers?: () => void;
@@ -26,6 +27,7 @@ export function TeamCard({
   team,
   regionName,
   dancerCount,
+  scheduleSummary,
   onEdit,
   onDelete,
   onAssignDancers,
@@ -102,6 +104,12 @@ export function TeamCard({
             👥 {dancerCount} dansçı
           </ThemedText>
         </View>
+
+        {scheduleSummary && (
+          <ThemedText type="small" themeColor="textSecondary">
+            🗓️ {scheduleSummary}
+          </ThemedText>
+        )}
       </View>
     </ThemedView>
   );
