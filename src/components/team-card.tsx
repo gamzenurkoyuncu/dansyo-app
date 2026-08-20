@@ -12,6 +12,7 @@ type TeamCardProps = {
   dancerCount: number;
   scheduleSummary?: string;
   absenceRate?: number;
+  onPress?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onAssignDancers?: () => void;
@@ -32,6 +33,7 @@ export function TeamCard({
   dancerCount,
   scheduleSummary,
   absenceRate,
+  onPress,
   onEdit,
   onDelete,
   onAssignDancers,
@@ -49,7 +51,8 @@ export function TeamCard({
   );
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
+    <Pressable disabled={!onPress} style={({ pressed }) => pressed && styles.pressed} onPress={onPress}>
+      <ThemedView type="backgroundElement" style={styles.card}>
       <View style={[styles.accentBar, { backgroundColor: accent }]} />
 
       <View style={styles.body}>
@@ -127,7 +130,8 @@ export function TeamCard({
           </ThemedText>
         )}
       </View>
-    </ThemedView>
+      </ThemedView>
+    </Pressable>
   );
 }
 

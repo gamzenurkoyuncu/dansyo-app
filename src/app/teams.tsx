@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DancerCard } from '@/components/dancer-card';
 import { getAccentColor, TeamCard } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -24,6 +25,7 @@ import {
   getAssignedDancerIds,
   getAvailableSeasons,
   getConflictingPracticeSlots,
+  getConsecutiveAbsences,
   getNextSeasonLabel,
   getInstructorForSeason,
   getPracticeSlotsForTeam,
@@ -105,6 +107,7 @@ export default function TeamsScreen() {
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
   const [assigningTeam, setAssigningTeam] = useState<Team | null>(null);
   const [historyTeam, setHistoryTeam] = useState<Team | null>(null);
+  const [viewingTeam, setViewingTeam] = useState<Team | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [undoTeam, setUndoTeam] = useState<{
     team: Team;
@@ -136,8 +139,14 @@ export default function TeamsScreen() {
   const formAccent = editingTeamId ? getAccentColor(editingTeamId) : PRIMARY_COLOR;
   const assigningTeamAccent = assigningTeam ? getAccentColor(assigningTeam.id) : PRIMARY_COLOR;
   const historyTeamAccent = historyTeam ? getAccentColor(historyTeam.id) : PRIMARY_COLOR;
+  const viewingTeamAccent = viewingTeam ? getAccentColor(viewingTeam.id) : PRIMARY_COLOR;
   const assignedDancerIds = assigningTeam
     ? getAssignedDancerIds(assignments, assigningTeam.id, selectedSeason)
+    : [];
+  const viewingTeamDancers = viewingTeam
+    ? getAssignedDancerIds(assignments, viewingTeam.id, selectedSeason)
+        .map((dancerId) => dancers.find((dancer) => dancer.id === dancerId))
+        .filter((dancer) => dancer !== undefined)
     : [];
 
   function openNewSeasonForm() {
@@ -377,6 +386,7 @@ export default function TeamsScreen() {
                     .map(formatPracticeSlot)
                     .join(', ')}
                   absenceRate={attendanceSummary.total > 0 ? attendanceSummary.absenceRate : undefined}
+                  onPress={() => setViewingTeam(team)}
                   onEdit={() => openEditForm(team)}
                   onDelete={() => setDeletingTeam(team)}
                   onAssignDancers={() => setAssigningTeam(team)}
@@ -873,6 +883,69 @@ export default function TeamsScreen() {
           </ThemedView>
         </ThemedView>
       </Modal>
+
+      <Modal
+        visible={viewingTeam !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setViewingTeam(null)}>
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView type="backgroundElement" style={styles.modalCard}>
+            <View style={styles.formHeader}>
+              <View style={[styles.formIcon, { backgroundColor: viewingTeamAccent + '26' }]}>
+                <ThemedText style={styles.formIconGlyph}>👥</ThemedText>
+              </View>
+              <View style={styles.formHeaderText}>
+                <ThemedText type="subtitle">{viewingTeam?.name}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {selectedSeason} sezonu · {viewingTeamDancers.length} dansçı
+                </ThemedText>
+              </View>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+                onPress={() => setViewingTeam(null)}>
+                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.assignList}>
+              {viewingTeamDancers.length === 0 ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Bu ekibe {selectedSeason} sezonu için atanmış dansçı yok.
+                </ThemedText>
+              ) : (
+                <View style={styles.viewingDancerList}>
+                  {viewingTeamDancers.map((dancer) => (
+                    <DancerCard
+                      key={dancer.id}
+                      dancer={dancer}
+                      consecutiveAbsences={getConsecutiveAbsences(attendanceRecords, dancer.id)}
+                    />
+                  ))}
+                </View>
+              )}
+            </ScrollView>
+
+            <Pressable
+              style={({ pressed }) => pressed && styles.pressed}
+              onPress={() => {
+                const team = viewingTeam;
+                setViewingTeam(null);
+                setAssigningTeam(team);
+              }}>
+              <View
+                style={[
+                  styles.primaryButton,
+                  styles.primaryButtonFull,
+                  { backgroundColor: viewingTeamAccent },
+                ]}>
+                <ThemedText style={styles.primaryButtonText}>Dansçı Ata</ThemedText>
+              </View>
+            </Pressable>
+          </ThemedView>
+        </ThemedView>
+      </Modal>
     </>
   );
 }
@@ -979,6 +1052,9 @@ const styles = StyleSheet.create({
   },
   assignList: {
     maxHeight: 320,
+  },
+  viewingDancerList: {
+    gap: Spacing.two,
   },
   dancerRow: {
     flexDirection: 'row',
