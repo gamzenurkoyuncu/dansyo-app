@@ -63,3 +63,7 @@ export function getPaymentsForDancer(records: PaymentRecord[], dancerId: string)
     .filter((record) => record.dancerId === dancerId)
     .sort((a, b) => b.month.localeCompare(a.month));
 }
+
+export function getUnpaidCount(records: PaymentRecord[], month: string): number {
+  return records.filter((record) => record.month === month && !record.paid).length;
+}

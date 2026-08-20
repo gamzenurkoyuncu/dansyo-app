@@ -5,8 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { getCurrentMonthISO, getUnpaidCount } from '@/data/mock-payments';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
+
+const DANGER_COLOR = '#e05252';
 
 type QuickLinkCardProps = {
   href: Href;
@@ -45,7 +48,8 @@ export default function HomeScreen() {
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
   const theme = useTheme();
-  const { teams, dancers, currentSeason } = useAppData();
+  const { teams, dancers, currentSeason, paymentRecords } = useAppData();
+  const unpaidCount = getUnpaidCount(paymentRecords, getCurrentMonthISO());
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -104,6 +108,19 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
         </ThemedView>
+
+        {unpaidCount > 0 && (
+          <Link href="/payments" asChild>
+            <Pressable style={({ pressed }) => pressed && styles.pressed}>
+              <View style={styles.alertCard}>
+                <ThemedText style={styles.alertEmoji}>⚠️</ThemedText>
+                <ThemedText type="small" style={styles.alertText}>
+                  Bu ay {unpaidCount} dansçının ödemesi yapılmadı
+                </ThemedText>
+              </View>
+            </Pressable>
+          </Link>
+        )}
 
         <View style={styles.linkList}>
           <QuickLinkCard
@@ -175,6 +192,23 @@ const styles = StyleSheet.create({
     width: StyleSheet.hairlineWidth,
     height: 32,
     backgroundColor: 'rgba(128,128,128,0.3)',
+  },
+  alertCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.four,
+    backgroundColor: 'rgba(224,82,82,0.14)',
+  },
+  alertEmoji: {
+    fontSize: 18,
+  },
+  alertText: {
+    flex: 1,
+    color: DANGER_COLOR,
+    fontWeight: '700',
   },
   linkList: {
     gap: Spacing.three,
