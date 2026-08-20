@@ -16,7 +16,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { Dancer, formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
-import { getAttendanceForDancer, getTeamForDancer } from '@/data/mock-teams';
+import { getAttendanceForDancer, getAttendanceSummary, getTeamForDancer } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -321,6 +321,17 @@ export default function DancersScreen() {
                 <ThemedText style={styles.closeGlyph}>✕</ThemedText>
               </Pressable>
             </View>
+
+            {historyDancer &&
+              (() => {
+                const summary = getAttendanceSummary(attendanceRecords, historyDancer.id);
+                return summary.total > 0 ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Toplam {summary.total} kayıt · {summary.absent} devamsızlık (%
+                    {Math.round(summary.absenceRate * 100)})
+                  </ThemedText>
+                ) : null;
+              })()}
 
             <ScrollView style={styles.attendanceList}>
               {!historyDancer || getAttendanceForDancer(attendanceRecords, historyDancer.id).length === 0 ? (

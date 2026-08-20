@@ -265,3 +265,20 @@ export function getAttendanceForDancer(
     .filter((record) => record.dancerId === dancerId)
     .sort((a, b) => b.date.localeCompare(a.date));
 }
+
+export type AttendanceSummary = {
+  total: number;
+  present: number;
+  absent: number;
+  absenceRate: number;
+};
+
+export function getAttendanceSummary(
+  records: AttendanceRecord[],
+  dancerId: string,
+): AttendanceSummary {
+  const dancerRecords = records.filter((record) => record.dancerId === dancerId);
+  const total = dancerRecords.length;
+  const absent = dancerRecords.filter((record) => !record.present).length;
+  return { total, present: total - absent, absent, absenceRate: total > 0 ? absent / total : 0 };
+}
