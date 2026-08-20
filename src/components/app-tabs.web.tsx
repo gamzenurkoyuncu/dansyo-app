@@ -33,6 +33,9 @@ export default function AppTabs() {
           <TabTrigger name="dancers" href="/dancers" asChild>
             <TabButton>Dansçılar</TabButton>
           </TabTrigger>
+          <TabTrigger name="attendance" href="/attendance" asChild>
+            <TabButton>Yoklama</TabButton>
+          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>

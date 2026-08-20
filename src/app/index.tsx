@@ -100,6 +100,8 @@ export default function HomeScreen() {
           subtitle="Dansçıları görüntüle, ekle"
         />
 
+        <QuickLinkCard href="/attendance" emoji="✅" title="Yoklama" subtitle="Yoklama al" />
+
         {Platform.OS === 'web' && <WebBadge />}
       </SafeAreaView>
     </ThemedView>

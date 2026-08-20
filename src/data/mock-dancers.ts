@@ -14,14 +14,21 @@ export const initialDancers: Dancer[] = [
 ];
 
 export function getAge(birthDate: string): number | null {
-  const birth = new Date(birthDate);
-  if (Number.isNaN(birth.getTime())) return null;
+  const match = birthDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  const [, birthYear, birthMonth, birthDay] = match;
 
+  // Compared as local date parts (not via Date parsing of the ISO string,
+  // which JS treats as UTC) so this doesn't drift by a day near the
+  // birthday depending on the device's timezone.
   const now = new Date();
-  let age = now.getFullYear() - birth.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+  const currentDay = now.getDate();
+
+  let age = now.getFullYear() - Number(birthYear);
   const hasHadBirthdayThisYear =
-    now.getMonth() > birth.getMonth() ||
-    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
+    currentMonth > Number(birthMonth) ||
+    (currentMonth === Number(birthMonth) && currentDay >= Number(birthDay));
   if (!hasHadBirthdayThisYear) age -= 1;
 
   return age;
@@ -32,17 +39,19 @@ export function parseTurkishDate(input: string): string | null {
   if (!match) return null;
 
   const [, day, month, year] = match;
-  const date = new Date(Number(year), Number(month) - 1, Number(day));
-  if (Number.isNaN(date.getTime())) return null;
+  const dayNum = Number(day);
+  const monthNum = Number(month);
+  if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) return null;
 
-  return date.toISOString().slice(0, 10);
+  // Built as plain strings (no Date/toISOString) so the result never shifts
+  // by a day depending on the device's timezone.
+  return `${year}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
 }
 
 export function formatTurkishDate(isoDate: string): string {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return isoDate;
+  const match = isoDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return isoDate;
 
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  return `${day}.${month}.${date.getFullYear()}`;
+  const [, year, month, day] = match;
+  return `${day}.${month}.${year}`;
 }

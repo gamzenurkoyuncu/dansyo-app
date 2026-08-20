@@ -2,7 +2,9 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 
 import { Dancer, initialDancers } from '@/data/mock-dancers';
 import {
+  AttendanceRecord,
   CURRENT_SEASON,
+  initialAttendanceRecords,
   initialPracticeSlots,
   initialSeasonRegions,
   initialSeasons,
@@ -29,6 +31,8 @@ type AppDataContextValue = {
   setCurrentSeason: Dispatch<SetStateAction<string>>;
   practiceSlots: PracticeSlot[];
   setPracticeSlots: Dispatch<SetStateAction<PracticeSlot[]>>;
+  attendanceRecords: AttendanceRecord[];
+  setAttendanceRecords: Dispatch<SetStateAction<AttendanceRecord[]>>;
 };
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -41,6 +45,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [seasons, setSeasons] = useState<string[]>(initialSeasons);
   const [currentSeason, setCurrentSeason] = useState<string>(CURRENT_SEASON);
   const [practiceSlots, setPracticeSlots] = useState<PracticeSlot[]>(initialPracticeSlots);
+  const [attendanceRecords, setAttendanceRecords] =
+    useState<AttendanceRecord[]>(initialAttendanceRecords);
 
   return (
     <AppDataContext
@@ -59,6 +65,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setCurrentSeason,
         practiceSlots,
         setPracticeSlots,
+        attendanceRecords,
+        setAttendanceRecords,
       }}>
       {children}
     </AppDataContext>

@@ -37,6 +37,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Label>Dansçılar</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="person.2.fill" />
       </NativeTabs.Trigger>
+
+      <NativeTabs.Trigger name="attendance">
+        <NativeTabs.Trigger.Label>Yoklama</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="checkmark.circle.fill" />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }

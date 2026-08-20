@@ -53,6 +53,14 @@ export type PracticeSlot = {
   endTime: string;
 };
 
+export type AttendanceRecord = {
+  id: string;
+  teamId: string;
+  dancerId: string;
+  date: string; // ISO date, e.g. '2026-08-17'
+  present: boolean;
+};
+
 export const CURRENT_SEASON = '2025-2026';
 export const PREVIOUS_SEASON = '2024-2025';
 export const NEXT_SEASON = '2026-2027';
@@ -112,6 +120,11 @@ export const initialPracticeSlots: PracticeSlot[] = [
     endTime: '20:30',
   },
   { id: 'ps5', teamId: '4', season: CURRENT_SEASON, day: 'Cuma', startTime: '20:00', endTime: '21:30' },
+];
+
+export const initialAttendanceRecords: AttendanceRecord[] = [
+  { id: 'att1', teamId: '2', dancerId: '1', date: '2026-08-17', present: true },
+  { id: 'att2', teamId: '2', dancerId: '2', date: '2026-08-17', present: false },
 ];
 
 export function getRegionForSeason(
@@ -206,4 +219,40 @@ export function formatPracticeSlot(slot: PracticeSlot): string {
 
 export function isValidTime(value: string): boolean {
   return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value.trim());
+}
+
+export function getAttendanceForTeamDate(
+  records: AttendanceRecord[],
+  teamId: string,
+  date: string,
+): AttendanceRecord[] {
+  return records.filter((record) => record.teamId === teamId && record.date === date);
+}
+
+export function getAttendanceStatus(
+  records: AttendanceRecord[],
+  teamId: string,
+  dancerId: string,
+  date: string,
+): boolean | undefined {
+  return records.find(
+    (record) => record.teamId === teamId && record.dancerId === dancerId && record.date === date,
+  )?.present;
+}
+
+export function setAttendance(
+  records: AttendanceRecord[],
+  teamId: string,
+  dancerId: string,
+  date: string,
+  present: boolean,
+): AttendanceRecord[] {
+  const withoutRecord = records.filter(
+    (record) =>
+      !(record.teamId === teamId && record.dancerId === dancerId && record.date === date),
+  );
+  return [
+    ...withoutRecord,
+    { id: `${teamId}-${dancerId}-${date}`, teamId, dancerId, date, present },
+  ];
 }
