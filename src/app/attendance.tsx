@@ -7,7 +7,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { addDaysToISO, formatTurkishDate, getTodayISO, parseTurkishDate } from '@/data/mock-dancers';
-import { getAssignedDancerIds, getAttendanceStatus, setAttendance } from '@/data/mock-teams';
+import {
+  getAssignedDancerIds,
+  getAttendanceDatesForTeam,
+  getAttendanceSummary,
+  getConsecutiveAbsences,
+  setAttendance,
+} from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -34,6 +40,7 @@ export default function AttendanceScreen() {
 
   const [dateInput, setDateInput] = useState(formatTurkishDate(getTodayISO()));
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(teams[0]?.id ?? null);
+  const [expandedDancerId, setExpandedDancerId] = useState<string | null>(null);
 
   const parsedDate = parseTurkishDate(dateInput);
   const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
@@ -44,20 +51,39 @@ export default function AttendanceScreen() {
         .filter((dancer) => dancer !== undefined)
     : [];
 
-  const rows = teamDancers.map((dancer) => ({
-    dancer,
-    present:
+  const unsortedRows = teamDancers.map((dancer) => {
+    const record =
       selectedTeam && parsedDate
-        ? getAttendanceStatus(attendanceRecords, selectedTeam.id, dancer.id, parsedDate)
-        : undefined,
-  }));
+        ? attendanceRecords.find(
+            (item) =>
+              item.teamId === selectedTeam.id && item.dancerId === dancer.id && item.date === parsedDate,
+          )
+        : undefined;
+    return { dancer, present: record?.present, note: record?.note };
+  });
+  const rows = [
+    ...unsortedRows.filter((row) => row.present === undefined),
+    ...unsortedRows.filter((row) => row.present !== undefined),
+  ];
   const presentCount = rows.filter((row) => row.present === true).length;
   const absentCount = rows.filter((row) => row.present === false).length;
 
-  function handleMark(dancerId: string, present: boolean) {
+  const pastDates = selectedTeam ? getAttendanceDatesForTeam(attendanceRecords, selectedTeam.id) : [];
+
+  function handleMark(dancerId: string, present: boolean, note?: string) {
     if (!selectedTeam || !parsedDate) return;
     setAttendanceRecords((prev) =>
-      setAttendance(prev, selectedTeam.id, dancerId, parsedDate, present),
+      setAttendance(prev, selectedTeam.id, dancerId, parsedDate, present, note),
+    );
+  }
+
+  function handleMarkAllPresent() {
+    if (!selectedTeam || !parsedDate) return;
+    setAttendanceRecords((prev) =>
+      teamDancers.reduce(
+        (acc, dancer) => setAttendance(acc, selectedTeam.id, dancer.id, parsedDate, true),
+        prev,
+      ),
     );
   }
 
@@ -123,6 +149,29 @@ export default function AttendanceScreen() {
               Geçerli bir tarih gir (gg.aa.yyyy)
             </ThemedText>
           )}
+          {pastDates.length > 0 && (
+            <View style={styles.pastDatesBlock}>
+              <ThemedText type="small" themeColor="textSecondary">
+                🕘 Bu ekibin geçmiş yoklama tarihleri
+              </ThemedText>
+              <View style={styles.quickDateRow}>
+                {pastDates.slice(0, 8).map((isoDate) => {
+                  const isSelected = parsedDate === isoDate;
+                  return (
+                    <Pressable key={isoDate} onPress={() => setDateInput(formatTurkishDate(isoDate))}>
+                      <View style={[styles.quickDateChip, isSelected && styles.quickDateChipSelected]}>
+                        <ThemedText
+                          type="small"
+                          style={isSelected ? styles.quickDateChipSelectedText : undefined}>
+                          {formatTurkishDate(isoDate)}
+                        </ThemedText>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
         </View>
 
         <View style={styles.field}>
@@ -156,11 +205,20 @@ export default function AttendanceScreen() {
           </View>
         </View>
 
-        {selectedTeam && parsedDate && (
-          <ThemedText type="small" themeColor="textSecondary">
-            ✅ {presentCount} var · ❌ {absentCount} yok · {rows.length - presentCount - absentCount}{' '}
-            işaretlenmedi
-          </ThemedText>
+        {selectedTeam && parsedDate && rows.length > 0 && (
+          <View style={styles.summaryRow}>
+            <ThemedText type="small" themeColor="textSecondary" style={styles.summaryText}>
+              ✅ {presentCount} var · ❌ {absentCount} yok · {rows.length - presentCount - absentCount}{' '}
+              işaretlenmedi
+            </ThemedText>
+            <Pressable onPress={handleMarkAllPresent}>
+              <View style={styles.markAllButton}>
+                <ThemedText type="small" style={styles.markAllButtonText}>
+                  Tümünü Var İşaretle
+                </ThemedText>
+              </View>
+            </Pressable>
+          </View>
         )}
 
         <View style={styles.list}>
@@ -177,41 +235,76 @@ export default function AttendanceScreen() {
               Bu ekibe {currentSeason} sezonu için atanmış dansçı yok.
             </ThemedText>
           ) : (
-            rows.map(({ dancer, present }) => (
-              <ThemedView key={dancer.id} type="backgroundElement" style={styles.dancerCard}>
-                <ThemedText style={styles.dancerName}>
-                  {dancer.firstName} {dancer.lastName}
-                </ThemedText>
-                <View style={styles.markButtons}>
-                  <Pressable onPress={() => handleMark(dancer.id, true)}>
-                    <View
-                      style={[
-                        styles.markButton,
-                        present === true && { backgroundColor: SUCCESS_COLOR },
-                      ]}>
-                      <ThemedText
-                        type="small"
-                        style={present === true ? styles.markButtonSelectedText : styles.successText}>
-                        Var
-                      </ThemedText>
+            rows.map(({ dancer, present, note }) => {
+              const isExpanded = expandedDancerId === dancer.id;
+              const summary = getAttendanceSummary(attendanceRecords, dancer.id);
+              const consecutiveAbsences = getConsecutiveAbsences(attendanceRecords, dancer.id);
+              const attendanceRate =
+                summary.total > 0 ? Math.round((summary.present / summary.total) * 100) : null;
+              return (
+                <ThemedView key={dancer.id} type="backgroundElement" style={styles.dancerCard}>
+                  <Pressable
+                    style={styles.dancerRow}
+                    onPress={() => setExpandedDancerId(isExpanded ? null : dancer.id)}>
+                    <ThemedText style={styles.dancerName}>
+                      {dancer.firstName} {dancer.lastName}
+                    </ThemedText>
+                    <View style={styles.markButtons}>
+                      <Pressable onPress={() => handleMark(dancer.id, true)}>
+                        <View
+                          style={[
+                            styles.markButton,
+                            present === true && { backgroundColor: SUCCESS_COLOR },
+                          ]}>
+                          <ThemedText
+                            type="small"
+                            style={present === true ? styles.markButtonSelectedText : styles.successText}>
+                            Var
+                          </ThemedText>
+                        </View>
+                      </Pressable>
+                      <Pressable onPress={() => handleMark(dancer.id, false)}>
+                        <View
+                          style={[
+                            styles.markButton,
+                            present === false && { backgroundColor: DANGER_COLOR },
+                          ]}>
+                          <ThemedText
+                            type="small"
+                            style={present === false ? styles.markButtonSelectedText : styles.errorText}>
+                            Yok
+                          </ThemedText>
+                        </View>
+                      </Pressable>
                     </View>
                   </Pressable>
-                  <Pressable onPress={() => handleMark(dancer.id, false)}>
-                    <View
-                      style={[
-                        styles.markButton,
-                        present === false && { backgroundColor: DANGER_COLOR },
-                      ]}>
-                      <ThemedText
-                        type="small"
-                        style={present === false ? styles.markButtonSelectedText : styles.errorText}>
-                        Yok
+
+                  {present === false && (
+                    <TextInput
+                      value={note ?? ''}
+                      onChangeText={(text) => handleMark(dancer.id, false, text)}
+                      placeholder="Not ekle (örn. hasta, izinli)"
+                      placeholderTextColor={theme.textSecondary}
+                      style={[styles.noteInput, { color: theme.text, borderColor: theme.backgroundSelected }]}
+                    />
+                  )}
+
+                  {isExpanded && (
+                    <View style={styles.detailBlock}>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {summary.total === 0
+                          ? 'Henüz yoklama kaydı yok.'
+                          : `Toplam ${summary.total} yoklama · %${attendanceRate} katılım${
+                              consecutiveAbsences > 0
+                                ? ` · Üst üste ${consecutiveAbsences} devamsızlık`
+                                : ''
+                            }`}
                       </ThemedText>
                     </View>
-                  </Pressable>
-                </View>
-              </ThemedView>
-            ))
+                  )}
+                </ThemedView>
+              );
+            })
           )}
         </View>
       </View>
@@ -288,16 +381,55 @@ const styles = StyleSheet.create({
   list: {
     gap: Spacing.three,
   },
-  dancerCard: {
+  pastDatesBlock: {
+    gap: Spacing.one,
+    marginTop: Spacing.one,
+  },
+  summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  summaryText: {
+    flexShrink: 1,
+  },
+  markAllButton: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
+    backgroundColor: PRIMARY_COLOR,
+  },
+  markAllButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  dancerCard: {
     padding: Spacing.three,
     borderRadius: Spacing.three,
+    gap: Spacing.two,
+  },
+  dancerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   dancerName: {
     fontWeight: '700',
     flexShrink: 1,
+  },
+  noteInput: {
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+    fontSize: 14,
+  },
+  detailBlock: {
+    paddingTop: Spacing.one,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(128,128,128,0.24)',
   },
   markButtons: {
     flexDirection: 'row',

@@ -65,6 +65,7 @@ export type AttendanceRecord = {
   dancerId: string;
   date: string; // ISO date, e.g. '2026-08-17'
   present: boolean;
+  note?: string;
 };
 
 export const CURRENT_SEASON = '2025-2026';
@@ -315,15 +316,31 @@ export function setAttendance(
   dancerId: string,
   date: string,
   present: boolean,
+  note?: string,
 ): AttendanceRecord[] {
+  const existing = records.find(
+    (record) => record.teamId === teamId && record.dancerId === dancerId && record.date === date,
+  );
   const withoutRecord = records.filter(
     (record) =>
       !(record.teamId === teamId && record.dancerId === dancerId && record.date === date),
   );
   return [
     ...withoutRecord,
-    { id: `${teamId}-${dancerId}-${date}`, teamId, dancerId, date, present },
+    {
+      id: `${teamId}-${dancerId}-${date}`,
+      teamId,
+      dancerId,
+      date,
+      present,
+      note: note !== undefined ? note : existing?.note,
+    },
   ];
+}
+
+export function getAttendanceDatesForTeam(records: AttendanceRecord[], teamId: string): string[] {
+  const dates = new Set(records.filter((record) => record.teamId === teamId).map((record) => record.date));
+  return Array.from(dates).sort((a, b) => b.localeCompare(a));
 }
 
 export function getAttendanceForDancer(
