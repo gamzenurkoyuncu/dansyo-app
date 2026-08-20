@@ -386,7 +386,8 @@ export default function DancersScreen() {
         <KeyboardAvoidingView
           style={styles.modalOverlay}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <ThemedView type="backgroundElement" style={styles.modalCard}>
+          <ThemedView type="backgroundElement" style={[styles.modalCard, styles.scrollableModalCard]}>
+            <ScrollView contentContainerStyle={styles.formScrollContent}>
             <View style={styles.formHeader}>
               <View style={styles.formIcon}>
                 <ThemedText style={styles.formIconGlyph}>{editingDancerId ? '✏️' : '➕'}</ThemedText>
@@ -569,6 +570,7 @@ export default function DancersScreen() {
               onPress={handleCancelForm}>
               <ThemedText themeColor="textSecondary">İptal</ThemedText>
             </Pressable>
+            </ScrollView>
           </ThemedView>
         </KeyboardAvoidingView>
       </Modal>
@@ -878,6 +880,13 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     borderRadius: Spacing.three,
     padding: Spacing.four,
+    gap: Spacing.three,
+  },
+  scrollableModalCard: {
+    maxHeight: '85%',
+    gap: 0,
+  },
+  formScrollContent: {
     gap: Spacing.three,
   },
   formHeader: {
