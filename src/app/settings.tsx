@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,6 +24,7 @@ export default function SettingsScreen() {
   };
   const theme = useTheme();
   const { themePreference, setThemePreference } = useAppData();
+  const appVersion = Constants.expoConfig?.version ?? '1.0.0';
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -43,31 +45,59 @@ export default function SettingsScreen() {
       contentInset={insets}
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <ThemedText type="subtitle">Ayarlar</ThemedText>
+        <View style={styles.heroSection}>
+          <ThemedText style={styles.heroEmoji}>⚙️</ThemedText>
+          <ThemedText type="title" style={styles.title}>
+            Ayarlar
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            Uygulama tercihleri
+          </ThemedText>
         </View>
 
         <View style={styles.section}>
-          <ThemedText type="small" themeColor="textSecondary">
-            🎨 Görünüm
+          <ThemedText type="small" themeColor="textSecondary" style={styles.sectionTitle}>
+            GÖRÜNÜM
           </ThemedText>
-          <View style={styles.optionRow}>
-            {THEME_OPTIONS.map((option) => {
+          <ThemedView type="backgroundElement" style={styles.card}>
+            {THEME_OPTIONS.map((option, index) => {
               const isSelected = option.value === themePreference;
+              const isLast = index === THEME_OPTIONS.length - 1;
               return (
-                <Pressable key={option.value} onPress={() => setThemePreference(option.value)}>
-                  <ThemedView
-                    type={isSelected ? undefined : 'backgroundElement'}
-                    style={[styles.optionChip, isSelected && { backgroundColor: PRIMARY_COLOR }]}>
-                    <ThemedText style={styles.optionEmoji}>{option.emoji}</ThemedText>
-                    <ThemedText style={isSelected ? styles.optionLabelSelected : undefined}>
-                      {option.label}
-                    </ThemedText>
-                  </ThemedView>
+                <Pressable
+                  key={option.value}
+                  style={({ pressed }) => pressed && styles.pressed}
+                  onPress={() => setThemePreference(option.value)}>
+                  <View style={[styles.row, !isLast && styles.rowDivider]}>
+                    <View style={styles.rowLeft}>
+                      <ThemedText style={styles.rowEmoji}>{option.emoji}</ThemedText>
+                      <ThemedText>{option.label}</ThemedText>
+                    </View>
+                    {isSelected && <ThemedText style={styles.checkmark}>✓</ThemedText>}
+                  </View>
                 </Pressable>
               );
             })}
-          </View>
+          </ThemedView>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.sectionTitle}>
+            HAKKINDA
+          </ThemedText>
+          <ThemedView type="backgroundElement" style={styles.card}>
+            <View style={styles.aboutRow}>
+              <View style={styles.aboutIcon}>
+                <ThemedText style={styles.aboutEmoji}>🩰</ThemedText>
+              </View>
+              <View>
+                <ThemedText style={styles.aboutName}>DansYo</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Sürüm {appVersion}
+                </ThemedText>
+              </View>
+            </View>
+          </ThemedView>
         </View>
       </View>
     </ScrollView>
@@ -89,31 +119,73 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     gap: Spacing.four,
   },
-  header: {
-    gap: Spacing.half,
+  heroSection: {
+    alignItems: 'center',
+    gap: Spacing.one,
     paddingTop: Spacing.six,
+  },
+  heroEmoji: {
+    fontSize: 40,
+  },
+  title: {
+    textAlign: 'center',
   },
   section: {
     gap: Spacing.two,
   },
-  optionRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.two,
+  sectionTitle: {
+    letterSpacing: 0.5,
+    paddingHorizontal: Spacing.one,
   },
-  optionChip: {
+  card: {
+    borderRadius: Spacing.four,
+    overflow: 'hidden',
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.one,
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
+    paddingVertical: Spacing.three,
   },
-  optionEmoji: {
-    fontSize: 14,
+  rowDivider: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(128,128,128,0.2)',
   },
-  optionLabelSelected: {
-    color: '#ffffff',
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  rowEmoji: {
+    fontSize: 16,
+  },
+  checkmark: {
+    color: PRIMARY_COLOR,
     fontWeight: '700',
+    fontSize: 16,
+  },
+  aboutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.three,
+  },
+  aboutIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(60,135,247,0.16)',
+  },
+  aboutEmoji: {
+    fontSize: 20,
+  },
+  aboutName: {
+    fontWeight: '700',
+  },
+  pressed: {
+    opacity: 0.6,
   },
 });
