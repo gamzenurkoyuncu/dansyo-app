@@ -250,6 +250,24 @@ export function formatPracticeSlot(slot: PracticeSlot): string {
   return `${slot.day} ${slot.startTime}-${slot.endTime}`;
 }
 
+export function getTodayDayOfWeek(): DayOfWeek {
+  const jsDay = new Date().getDay(); // 0 (Sunday) .. 6 (Saturday)
+  const index = (jsDay + 6) % 7; // convert to Pazartesi=0 .. Pazar=6
+  return DAYS_OF_WEEK[index];
+}
+
+export function getTeamsPracticingToday(
+  slots: PracticeSlot[],
+  teams: Team[],
+  season: string,
+): Team[] {
+  const today = getTodayDayOfWeek();
+  const teamIds = new Set(
+    slots.filter((slot) => slot.season === season && slot.day === today).map((slot) => slot.teamId),
+  );
+  return teams.filter((team) => teamIds.has(team.id));
+}
+
 export function isValidTime(value: string): boolean {
   return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value.trim());
 }

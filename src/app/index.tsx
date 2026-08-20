@@ -5,11 +5,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { getTodayISO } from '@/data/mock-dancers';
 import { getCurrentMonthISO, getUnpaidCount } from '@/data/mock-payments';
+import { getAttendanceForTeamDate, getTeamsPracticingToday } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
 const DANGER_COLOR = '#e05252';
+const SUCCESS_COLOR = '#27ae60';
 
 type QuickLinkCardProps = {
   href: Href;
@@ -48,8 +51,10 @@ export default function HomeScreen() {
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
   const theme = useTheme();
-  const { teams, dancers, currentSeason, paymentRecords } = useAppData();
+  const { teams, dancers, currentSeason, paymentRecords, practiceSlots, attendanceRecords } =
+    useAppData();
   const unpaidCount = getUnpaidCount(paymentRecords, getCurrentMonthISO());
+  const teamsToday = getTeamsPracticingToday(practiceSlots, teams, currentSeason);
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -108,6 +113,25 @@ export default function HomeScreen() {
             </ThemedText>
           </View>
         </ThemedView>
+
+        {teamsToday.length > 0 && (
+          <ThemedView type="backgroundElement" style={styles.dailyCard}>
+            <ThemedText type="small" themeColor="textSecondary">
+              📅 Bugünün çalışmaları
+            </ThemedText>
+            {teamsToday.map((team) => {
+              const taken = getAttendanceForTeamDate(attendanceRecords, team.id, getTodayISO()).length > 0;
+              return (
+                <View key={team.id} style={styles.dailyRow}>
+                  <ThemedText type="small">{team.name}</ThemedText>
+                  <ThemedText type="small" style={taken ? styles.dailyTaken : styles.dailyPending}>
+                    {taken ? '✅ Alındı' : '⏳ Henüz alınmadı'}
+                  </ThemedText>
+                </View>
+              );
+            })}
+          </ThemedView>
+        )}
 
         {unpaidCount > 0 && (
           <Link href="/payments" asChild>
@@ -192,6 +216,24 @@ const styles = StyleSheet.create({
     width: StyleSheet.hairlineWidth,
     height: 32,
     backgroundColor: 'rgba(128,128,128,0.3)',
+  },
+  dailyCard: {
+    gap: Spacing.two,
+    padding: Spacing.three,
+    borderRadius: Spacing.four,
+  },
+  dailyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dailyTaken: {
+    color: SUCCESS_COLOR,
+    fontWeight: '700',
+  },
+  dailyPending: {
+    color: DANGER_COLOR,
+    fontWeight: '700',
   },
   alertCard: {
     flexDirection: 'row',

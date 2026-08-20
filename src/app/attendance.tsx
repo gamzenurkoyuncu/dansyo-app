@@ -6,7 +6,7 @@ import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { addDaysToISO, formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
+import { addDaysToISO, formatTurkishDate, getTodayISO, parseTurkishDate } from '@/data/mock-dancers';
 import { getAssignedDancerIds, getAttendanceStatus, setAttendance } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
@@ -21,16 +21,6 @@ const QUICK_DATE_OFFSETS: { label: string; offset: number }[] = [
   { label: 'Geçen hafta bu gün', offset: -7 },
 ];
 
-function todayISO() {
-  // Built from local date parts (no toISOString) so it reflects the
-  // device's local "today" rather than shifting with UTC offset.
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 export default function AttendanceScreen() {
   const safeAreaInsets = useSafeAreaInsets();
   const insets = {
@@ -42,7 +32,7 @@ export default function AttendanceScreen() {
   const { teams, dancers, assignments, currentSeason, attendanceRecords, setAttendanceRecords } =
     useAppData();
 
-  const [dateInput, setDateInput] = useState(formatTurkishDate(todayISO()));
+  const [dateInput, setDateInput] = useState(formatTurkishDate(getTodayISO()));
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(teams[0]?.id ?? null);
 
   const parsedDate = parseTurkishDate(dateInput);
@@ -111,7 +101,7 @@ export default function AttendanceScreen() {
           />
           <View style={styles.quickDateRow}>
             {QUICK_DATE_OFFSETS.map(({ label, offset }) => {
-              const optionDate = addDaysToISO(todayISO(), offset);
+              const optionDate = addDaysToISO(getTodayISO(), offset);
               const isSelected = parsedDate === optionDate;
               return (
                 <Pressable
