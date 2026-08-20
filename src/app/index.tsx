@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { getTodayISO } from '@/data/mock-dancers';
+import { Dancer, getDaysUntilNextBirthday, getTodayISO } from '@/data/mock-dancers';
 import { getCurrentMonthISO, getUnpaidCount } from '@/data/mock-payments';
 import { getAttendanceForTeamDate, getTeamsPracticingToday } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
@@ -13,6 +13,13 @@ import { useTheme } from '@/hooks/use-theme';
 
 const DANGER_COLOR = '#e05252';
 const SUCCESS_COLOR = '#27ae60';
+const UPCOMING_BIRTHDAY_WINDOW_DAYS = 7;
+
+function formatDaysUntil(days: number): string {
+  if (days === 0) return 'Bugün! 🎉';
+  if (days === 1) return 'Yarın';
+  return `${days} gün sonra`;
+}
 
 type QuickLinkCardProps = {
   href: Href;
@@ -55,6 +62,15 @@ export default function HomeScreen() {
     useAppData();
   const unpaidCount = getUnpaidCount(paymentRecords, getCurrentMonthISO());
   const teamsToday = getTeamsPracticingToday(practiceSlots, teams, currentSeason);
+
+  const upcomingBirthdays: { dancer: Dancer; days: number }[] = [];
+  for (const dancer of dancers) {
+    const days = getDaysUntilNextBirthday(dancer.birthDate);
+    if (days !== null && days <= UPCOMING_BIRTHDAY_WINDOW_DAYS) {
+      upcomingBirthdays.push({ dancer, days });
+    }
+  }
+  upcomingBirthdays.sort((a, b) => a.days - b.days);
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -130,6 +146,24 @@ export default function HomeScreen() {
                 </View>
               );
             })}
+          </ThemedView>
+        )}
+
+        {upcomingBirthdays.length > 0 && (
+          <ThemedView type="backgroundElement" style={styles.dailyCard}>
+            <ThemedText type="small" themeColor="textSecondary">
+              🎂 Yaklaşan doğum günleri
+            </ThemedText>
+            {upcomingBirthdays.map(({ dancer, days }) => (
+              <View key={dancer.id} style={styles.dailyRow}>
+                <ThemedText type="small">
+                  {dancer.firstName} {dancer.lastName}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {formatDaysUntil(days)}
+                </ThemedText>
+              </View>
+            ))}
           </ThemedView>
         )}
 

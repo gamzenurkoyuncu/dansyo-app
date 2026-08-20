@@ -77,6 +77,24 @@ export function getTodayISO(): string {
   return `${year}-${month}-${day}`;
 }
 
+export function getDaysUntilNextBirthday(birthDate: string): number | null {
+  const match = birthDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  const [, , birthMonth, birthDay] = match;
+
+  // Built from local date parts (no toISOString) so "today" and the
+  // birthday comparison stay in local time and don't drift by a day.
+  const now = new Date();
+  const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let nextBirthday = new Date(now.getFullYear(), Number(birthMonth) - 1, Number(birthDay));
+  if (nextBirthday < todayLocal) {
+    nextBirthday = new Date(now.getFullYear() + 1, Number(birthMonth) - 1, Number(birthDay));
+  }
+
+  const diffMs = nextBirthday.getTime() - todayLocal.getTime();
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
 export function getAge(birthDate: string): number | null {
   const match = birthDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!match) return null;
