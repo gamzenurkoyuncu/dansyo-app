@@ -52,11 +52,13 @@ export default function TeamsScreen() {
 
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
   const [assigningTeam, setAssigningTeam] = useState<Team | null>(null);
+  const [historyTeam, setHistoryTeam] = useState<Team | null>(null);
 
   const availableSeasons = getAvailableSeasons(seasonRegions);
   const canSubmit = nameInput.trim().length > 0 && regionInput.trim().length > 0;
   const formAccent = editingTeamId ? getAccentColor(editingTeamId) : PRIMARY_COLOR;
   const assigningTeamAccent = assigningTeam ? getAccentColor(assigningTeam.id) : PRIMARY_COLOR;
+  const historyTeamAccent = historyTeam ? getAccentColor(historyTeam.id) : PRIMARY_COLOR;
   const assignedDancerIds = assigningTeam
     ? getAssignedDancerIds(assignments, assigningTeam.id, selectedSeason)
     : [];
@@ -188,6 +190,7 @@ export default function TeamsScreen() {
                 onEdit={() => openEditForm(team)}
                 onDelete={() => setDeletingTeam(team)}
                 onAssignDancers={() => setAssigningTeam(team)}
+                onViewHistory={() => setHistoryTeam(team)}
               />
             ))}
           </View>
@@ -416,6 +419,81 @@ export default function TeamsScreen() {
           </ThemedView>
         </ThemedView>
       </Modal>
+
+      <Modal
+        visible={historyTeam !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setHistoryTeam(null)}>
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView type="backgroundElement" style={styles.modalCard}>
+            <View style={styles.formHeader}>
+              <View style={[styles.formIcon, { backgroundColor: historyTeamAccent + '26' }]}>
+                <ThemedText style={styles.formIconGlyph}>🕐</ThemedText>
+              </View>
+              <View style={styles.formHeaderText}>
+                <ThemedText type="subtitle">{historyTeam?.name}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Sezon geçmişi
+                </ThemedText>
+              </View>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+                onPress={() => setHistoryTeam(null)}>
+                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.assignList}>
+              {historyTeam &&
+                availableSeasons.map((season) => {
+                  const region = getRegionForSeason(seasonRegions, historyTeam.id, season);
+                  const dancerNames = getAssignedDancerIds(assignments, historyTeam.id, season)
+                    .map((dancerId) => dancers.find((dancer) => dancer.id === dancerId))
+                    .filter((dancer) => dancer !== undefined)
+                    .map((dancer) => `${dancer.firstName} ${dancer.lastName}`);
+
+                  return (
+                    <View key={season} style={styles.historyRow}>
+                      <View style={styles.historySeasonHeader}>
+                        <ThemedText type="smallBold">{season}</ThemedText>
+                        {season === selectedSeason && (
+                          <ThemedText type="small" style={styles.seasonOptionSelectedText}>
+                            görüntülenen sezon
+                          </ThemedText>
+                        )}
+                      </View>
+                      <View style={[styles.regionPill, { backgroundColor: historyTeamAccent + '26' }]}>
+                        <ThemedText
+                          type="small"
+                          style={[styles.regionText, { color: historyTeamAccent }]}>
+                          {region ?? 'Yöre atanmadı'}
+                        </ThemedText>
+                      </View>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {dancerNames.length > 0 ? dancerNames.join(', ') : 'Dansçı atanmadı'}
+                      </ThemedText>
+                    </View>
+                  );
+                })}
+            </ScrollView>
+
+            <Pressable
+              style={({ pressed }) => pressed && styles.pressed}
+              onPress={() => setHistoryTeam(null)}>
+              <View
+                style={[
+                  styles.primaryButton,
+                  styles.primaryButtonFull,
+                  { backgroundColor: historyTeamAccent },
+                ]}>
+                <ThemedText style={styles.primaryButtonText}>Kapat</ThemedText>
+              </View>
+            </Pressable>
+          </ThemedView>
+        </ThemedView>
+      </Modal>
     </>
   );
 }
@@ -513,6 +591,27 @@ const styles = StyleSheet.create({
   },
   dancerRowText: {
     gap: Spacing.half,
+  },
+  historyRow: {
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.three,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(128,128,128,0.2)',
+  },
+  historySeasonHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  regionPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.half,
+    borderRadius: Spacing.five,
+  },
+  regionText: {
+    fontWeight: '700',
   },
   modalCard: {
     width: '100%',

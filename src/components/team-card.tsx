@@ -12,6 +12,7 @@ type TeamCardProps = {
   onEdit?: () => void;
   onDelete?: () => void;
   onAssignDancers?: () => void;
+  onViewHistory?: () => void;
 };
 
 const ACCENT_PALETTE = ['#F2994A', '#2F80ED', '#9B51E0', '#14B8A6', '#F2C94C'];
@@ -28,8 +29,18 @@ export function TeamCard({
   onEdit,
   onDelete,
   onAssignDancers,
+  onViewHistory,
 }: TeamCardProps) {
   const accent = getAccentColor(team.id);
+
+  const regionBadge = (
+    <View style={[styles.regionPill, { backgroundColor: accent + '26' }]}>
+      <ThemedText type="small" style={[styles.regionText, { color: accent }]}>
+        {regionName ?? 'Yöre atanmadı'}
+      </ThemedText>
+      {onViewHistory && <ThemedText style={[styles.historyGlyph, { color: accent }]}>🕐</ThemedText>}
+    </View>
+  );
 
   return (
     <ThemedView type="backgroundElement" style={styles.card}>
@@ -76,11 +87,16 @@ export function TeamCard({
         </View>
 
         <View style={styles.metaRow}>
-          <View style={[styles.regionPill, { backgroundColor: accent + '26' }]}>
-            <ThemedText type="small" style={[styles.regionText, { color: accent }]}>
-              {regionName ?? 'Yöre atanmadı'}
-            </ThemedText>
-          </View>
+          {onViewHistory ? (
+            <Pressable
+              hitSlop={4}
+              style={({ pressed }) => pressed && styles.pressed}
+              onPress={onViewHistory}>
+              {regionBadge}
+            </Pressable>
+          ) : (
+            regionBadge
+          )}
 
           <ThemedText type="small" themeColor="textSecondary">
             👥 {dancerCount} dansçı
@@ -143,12 +159,18 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   regionPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.half,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.half,
     borderRadius: Spacing.five,
   },
   regionText: {
     fontWeight: '700',
+  },
+  historyGlyph: {
+    fontSize: 11,
   },
   pressed: {
     opacity: 0.6,
