@@ -12,10 +12,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DancerCard } from '@/components/dancer-card';
+import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { Dancer, formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
+import { Dancer, formatTurkishDate, getAge, parseTurkishDate } from '@/data/mock-dancers';
 import { formatTurkishMonth, getPaymentsForDancer } from '@/data/mock-payments';
 import {
   getAttendanceForDancer,
@@ -85,8 +86,7 @@ export default function DancersScreen() {
   const [costumeSizeInput, setCostumeSizeInput] = useState('');
 
   const [deletingDancer, setDeletingDancer] = useState<Dancer | null>(null);
-  const [historyDancer, setHistoryDancer] = useState<Dancer | null>(null);
-  const [paymentsDancer, setPaymentsDancer] = useState<Dancer | null>(null);
+  const [profileDancerId, setProfileDancerId] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'grouped'>('list');
   const [undoDancer, setUndoDancer] = useState<{
@@ -104,6 +104,8 @@ export default function DancersScreen() {
   if (undoDancer !== null) {
     bannerDancer = undoDancer.dancer;
   }
+
+  const profileDancer = dancers.find((dancer) => dancer.id === profileDancerId) ?? null;
 
   const filteredDancers = dancers.filter((dancer) =>
     `${dancer.firstName} ${dancer.lastName}`
@@ -318,10 +320,9 @@ export default function DancersScreen() {
                   dancer={dancer}
                   teamName={getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name}
                   consecutiveAbsences={getConsecutiveAbsences(attendanceRecords, dancer.id)}
+                  onPress={() => setProfileDancerId(dancer.id)}
                   onEdit={() => openEditForm(dancer)}
                   onDelete={() => setDeletingDancer(dancer)}
-                  onViewAttendance={() => setHistoryDancer(dancer)}
-                  onViewPayments={() => setPaymentsDancer(dancer)}
                 />
               ))
             ) : (
@@ -339,10 +340,9 @@ export default function DancersScreen() {
                           getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name
                         }
                         consecutiveAbsences={getConsecutiveAbsences(attendanceRecords, dancer.id)}
+                        onPress={() => setProfileDancerId(dancer.id)}
                         onEdit={() => openEditForm(dancer)}
                         onDelete={() => setDeletingDancer(dancer)}
-                        onViewAttendance={() => setHistoryDancer(dancer)}
-                        onViewPayments={() => setPaymentsDancer(dancer)}
                       />
                     ))}
                   </View>
@@ -577,134 +577,185 @@ export default function DancersScreen() {
       </Modal>
 
       <Modal
-        visible={historyDancer !== null}
+        visible={profileDancer !== null}
         animationType="slide"
-        transparent
-        onRequestClose={() => setHistoryDancer(null)}>
-        <ThemedView style={styles.modalOverlay}>
-          <ThemedView type="backgroundElement" style={styles.modalCard}>
-            <View style={styles.formHeader}>
-              <View style={styles.formIcon}>
-                <ThemedText style={styles.formIconGlyph}>🕐</ThemedText>
+        onRequestClose={() => setProfileDancerId(null)}>
+        <ThemedView style={styles.profileScreen}>
+          <ScrollView
+            contentInset={insets}
+            contentContainerStyle={[styles.profileContent, contentPlatformStyle]}>
+            <View style={styles.profileInner}>
+              <View style={styles.profileTopBar}>
+                <Pressable
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+                  onPress={() => setProfileDancerId(null)}>
+                  <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+                </Pressable>
               </View>
-              <View style={styles.formHeaderText}>
-                <ThemedText type="subtitle">
-                  {historyDancer?.firstName} {historyDancer?.lastName}
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Yoklama geçmişi
-                </ThemedText>
-              </View>
-              <Pressable
-                hitSlop={8}
-                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
-                onPress={() => setHistoryDancer(null)}>
-                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
-              </Pressable>
-            </View>
 
-            {historyDancer &&
-              (() => {
-                const summary = getAttendanceSummary(attendanceRecords, historyDancer.id);
-                return summary.total > 0 ? (
+              {profileDancer && (
+                <ProfileContent
+                  dancer={profileDancer}
+                  teamName={
+                    getTeamForDancer(assignments, teams, profileDancer.id, currentSeason)?.name
+                  }
+                  attendanceRecords={attendanceRecords}
+                  paymentRecords={paymentRecords}
+                  teams={teams}
+                />
+              )}
+            </View>
+          </ScrollView>
+        </ThemedView>
+      </Modal>
+    </>
+  );
+}
+
+function ProfileContent({
+  dancer,
+  teamName,
+  attendanceRecords,
+  paymentRecords,
+  teams,
+}: {
+  dancer: Dancer;
+  teamName?: string;
+  attendanceRecords: ReturnType<typeof useAppData>['attendanceRecords'];
+  paymentRecords: ReturnType<typeof useAppData>['paymentRecords'];
+  teams: ReturnType<typeof useAppData>['teams'];
+}) {
+  const accent = getAccentColor(dancer.id);
+  const age = getAge(dancer.birthDate);
+  const initials = `${dancer.firstName.charAt(0)}${dancer.lastName.charAt(0)}`.toUpperCase();
+  const attendanceSummary = getAttendanceSummary(attendanceRecords, dancer.id);
+  const attendanceHistory = getAttendanceForDancer(attendanceRecords, dancer.id);
+  const paymentHistory = getPaymentsForDancer(paymentRecords, dancer.id);
+
+  const infoRows: { label: string; value: string }[] = [];
+  if (dancer.school) infoRows.push({ label: '🏫 Okul', value: dancer.school });
+  if (dancer.parentName) infoRows.push({ label: '👪 Veli', value: dancer.parentName });
+  if (dancer.parentPhone) infoRows.push({ label: '📞 Telefon', value: dancer.parentPhone });
+  if (dancer.height) infoRows.push({ label: '📏 Boy', value: `${dancer.height} cm` });
+  if (dancer.weight) infoRows.push({ label: '⚖️ Kilo', value: `${dancer.weight} kg` });
+  if (dancer.costumeSize) infoRows.push({ label: '👗 Kostüm Bedeni', value: dancer.costumeSize });
+
+  return (
+    <>
+      <View style={styles.profileHero}>
+        <View style={[styles.profileAvatar, { backgroundColor: accent + '33' }]}>
+          <ThemedText style={[styles.profileAvatarText, { color: accent }]}>{initials}</ThemedText>
+        </View>
+        <ThemedText type="subtitle" style={styles.profileName}>
+          {dancer.firstName} {dancer.lastName}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {age !== null ? `${age} yaş` : 'Doğum tarihi geçersiz'} ·{' '}
+          {formatTurkishDate(dancer.birthDate)}
+        </ThemedText>
+        {teamName && (
+          <View style={[styles.teamPill, { backgroundColor: accent + '26' }]}>
+            <ThemedText type="small" style={[styles.teamPillText, { color: accent }]}>
+              {teamName}
+            </ThemedText>
+          </View>
+        )}
+      </View>
+
+      {infoRows.length > 0 && (
+        <View style={styles.profileSection}>
+          <ThemedText type="small" themeColor="textSecondary" style={styles.groupTitle}>
+            BİLGİLER
+          </ThemedText>
+          <ThemedView type="backgroundElement" style={styles.profileCard}>
+            {infoRows.map((row, index) => (
+              <View
+                key={row.label}
+                style={[styles.profileRow, index < infoRows.length - 1 && styles.profileRowDivider]}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {row.label}
+                </ThemedText>
+                <ThemedText type="small">{row.value}</ThemedText>
+              </View>
+            ))}
+          </ThemedView>
+        </View>
+      )}
+
+      <View style={styles.profileSection}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.groupTitle}>
+          YOKLAMA
+        </ThemedText>
+        <ThemedView type="backgroundElement" style={styles.profileCard}>
+          {attendanceSummary.total > 0 && (
+            <View style={[styles.profileRow, styles.profileRowDivider]}>
+              <ThemedText type="small" themeColor="textSecondary">
+                Özet
+              </ThemedText>
+              <ThemedText type="small">
+                {attendanceSummary.total} kayıt · {attendanceSummary.absent} devamsızlık (%
+                {Math.round(attendanceSummary.absenceRate * 100)})
+              </ThemedText>
+            </View>
+          )}
+          {attendanceHistory.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.profileEmptyRow}>
+              Henüz yoklama kaydı yok.
+            </ThemedText>
+          ) : (
+            attendanceHistory.map((record, index) => (
+              <View
+                key={record.id}
+                style={[
+                  styles.profileRow,
+                  index < attendanceHistory.length - 1 && styles.profileRowDivider,
+                ]}>
+                <View>
+                  <ThemedText type="small">{formatTurkishDate(record.date)}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
-                    Toplam {summary.total} kayıt · {summary.absent} devamsızlık (%
-                    {Math.round(summary.absenceRate * 100)})
+                    {teams.find((team) => team.id === record.teamId)?.name ?? 'Bilinmeyen ekip'}
                   </ThemedText>
-                ) : null;
-              })()}
-
-            <ScrollView style={styles.attendanceList}>
-              {!historyDancer || getAttendanceForDancer(attendanceRecords, historyDancer.id).length === 0 ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  Henüz yoklama kaydı yok.
+                </View>
+                <ThemedText
+                  type="small"
+                  style={record.present ? styles.successText : styles.errorText}>
+                  {record.present ? 'Var' : 'Yok'}
                 </ThemedText>
-              ) : (
-                getAttendanceForDancer(attendanceRecords, historyDancer.id).map((record) => (
-                  <View key={record.id} style={styles.attendanceRow}>
-                    <View>
-                      <ThemedText>{formatTurkishDate(record.date)}</ThemedText>
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {teams.find((team) => team.id === record.teamId)?.name ?? 'Bilinmeyen ekip'}
-                      </ThemedText>
-                    </View>
-                    <ThemedText
-                      type="small"
-                      style={record.present ? styles.successText : styles.errorText}>
-                      {record.present ? 'Var' : 'Yok'}
-                    </ThemedText>
-                  </View>
-                ))
-              )}
-            </ScrollView>
-
-            <Pressable
-              style={({ pressed }) => pressed && styles.pressed}
-              onPress={() => setHistoryDancer(null)}>
-              <View style={[styles.primaryButton, styles.primaryButtonFull]}>
-                <ThemedText style={styles.primaryButtonText}>Kapat</ThemedText>
               </View>
-            </Pressable>
-          </ThemedView>
+            ))
+          )}
         </ThemedView>
-      </Modal>
+      </View>
 
-      <Modal
-        visible={paymentsDancer !== null}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setPaymentsDancer(null)}>
-        <ThemedView style={styles.modalOverlay}>
-          <ThemedView type="backgroundElement" style={styles.modalCard}>
-            <View style={styles.formHeader}>
-              <View style={styles.formIcon}>
-                <ThemedText style={styles.formIconGlyph}>💰</ThemedText>
-              </View>
-              <View style={styles.formHeaderText}>
-                <ThemedText type="subtitle">
-                  {paymentsDancer?.firstName} {paymentsDancer?.lastName}
+      <View style={styles.profileSection}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.groupTitle}>
+          ÖDEME
+        </ThemedText>
+        <ThemedView type="backgroundElement" style={styles.profileCard}>
+          {paymentHistory.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary" style={styles.profileEmptyRow}>
+              Henüz ödeme kaydı yok.
+            </ThemedText>
+          ) : (
+            paymentHistory.map((record, index) => (
+              <View
+                key={record.id}
+                style={[
+                  styles.profileRow,
+                  index < paymentHistory.length - 1 && styles.profileRowDivider,
+                ]}>
+                <ThemedText type="small">{formatTurkishMonth(record.month)}</ThemedText>
+                <ThemedText
+                  type="small"
+                  style={record.paid ? styles.successText : styles.errorText}>
+                  {record.paid ? 'Ödendi' : 'Ödenmedi'}
                 </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  Ödeme geçmişi
-                </ThemedText>
               </View>
-              <Pressable
-                hitSlop={8}
-                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
-                onPress={() => setPaymentsDancer(null)}>
-                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
-              </Pressable>
-            </View>
-
-            <ScrollView style={styles.attendanceList}>
-              {!paymentsDancer || getPaymentsForDancer(paymentRecords, paymentsDancer.id).length === 0 ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  Henüz ödeme kaydı yok.
-                </ThemedText>
-              ) : (
-                getPaymentsForDancer(paymentRecords, paymentsDancer.id).map((record) => (
-                  <View key={record.id} style={styles.attendanceRow}>
-                    <ThemedText>{formatTurkishMonth(record.month)}</ThemedText>
-                    <ThemedText
-                      type="small"
-                      style={record.paid ? styles.successText : styles.errorText}>
-                      {record.paid ? 'Ödendi' : 'Ödenmedi'}
-                    </ThemedText>
-                  </View>
-                ))
-              )}
-            </ScrollView>
-
-            <Pressable
-              style={({ pressed }) => pressed && styles.pressed}
-              onPress={() => setPaymentsDancer(null)}>
-              <View style={[styles.primaryButton, styles.primaryButtonFull]}>
-                <ThemedText style={styles.primaryButtonText}>Kapat</ThemedText>
-              </View>
-            </Pressable>
-          </ThemedView>
+            ))
+          )}
         </ThemedView>
-      </Modal>
+      </View>
     </>
   );
 }
@@ -851,17 +902,72 @@ const styles = StyleSheet.create({
     color: PRIMARY_COLOR,
     fontWeight: '700',
   },
-  attendanceList: {
-    maxHeight: 320,
+  teamPill: {
+    alignSelf: 'center',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.half,
+    borderRadius: Spacing.five,
+    marginTop: Spacing.one,
   },
-  attendanceRow: {
+  teamPillText: {
+    fontWeight: '700',
+  },
+  profileScreen: {
+    flex: 1,
+  },
+  profileContent: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  profileInner: {
+    maxWidth: MaxContentWidth,
+    width: '100%',
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.four,
+  },
+  profileTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  profileHero: {
+    alignItems: 'center',
+    gap: Spacing.half,
+  },
+  profileAvatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.one,
+  },
+  profileAvatarText: {
+    fontWeight: '700',
+    fontSize: 22,
+  },
+  profileName: {
+    textAlign: 'center',
+  },
+  profileSection: {
+    gap: Spacing.two,
+  },
+  profileCard: {
+    borderRadius: Spacing.four,
+    overflow: 'hidden',
+  },
+  profileRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Spacing.two,
+    paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
+  },
+  profileRowDivider: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(128,128,128,0.2)',
+  },
+  profileEmptyRow: {
+    padding: Spacing.three,
   },
   primaryButton: {
     backgroundColor: PRIMARY_COLOR,

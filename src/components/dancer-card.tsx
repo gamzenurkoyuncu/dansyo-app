@@ -13,102 +13,90 @@ type DancerCardProps = {
   dancer: Dancer;
   teamName?: string;
   consecutiveAbsences?: number;
+  onPress?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
-  onViewAttendance?: () => void;
-  onViewPayments?: () => void;
 };
 
 export function DancerCard({
   dancer,
   teamName,
   consecutiveAbsences,
+  onPress,
   onEdit,
   onDelete,
-  onViewAttendance,
-  onViewPayments,
 }: DancerCardProps) {
   const accent = getAccentColor(dancer.id);
   const age = getAge(dancer.birthDate);
   const initials = `${dancer.firstName.charAt(0)}${dancer.lastName.charAt(0)}`.toUpperCase();
 
   return (
-    <ThemedView type="backgroundElement" style={styles.card}>
-      <View style={[styles.avatar, { backgroundColor: accent + '33' }]}>
-        <ThemedText style={[styles.avatarText, { color: accent }]}>{initials}</ThemedText>
-      </View>
+    <Pressable
+      disabled={!onPress}
+      style={({ pressed }) => pressed && styles.pressed}
+      onPress={onPress}>
+      <ThemedView type="backgroundElement" style={styles.card}>
+        <View style={[styles.avatar, { backgroundColor: accent + '33' }]}>
+          <ThemedText style={[styles.avatarText, { color: accent }]}>{initials}</ThemedText>
+        </View>
 
-      <View style={styles.info}>
-        <ThemedText type="default" style={styles.name}>
-          {dancer.firstName} {dancer.lastName}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {age !== null ? `${age} yaş` : 'Doğum tarihi geçersiz'}
-          {dancer.school ? ` · ${dancer.school}` : ''}
-        </ThemedText>
-        {teamName && (
-          <View style={[styles.teamPill, { backgroundColor: accent + '26' }]}>
-            <ThemedText type="small" style={[styles.teamPillText, { color: accent }]}>
-              {teamName}
-            </ThemedText>
+        <View style={styles.info}>
+          <ThemedText type="default" style={styles.name}>
+            {dancer.firstName} {dancer.lastName}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {age !== null ? `${age} yaş` : 'Doğum tarihi geçersiz'}
+            {dancer.school ? ` · ${dancer.school}` : ''}
+          </ThemedText>
+          {teamName && (
+            <View style={[styles.teamPill, { backgroundColor: accent + '26' }]}>
+              <ThemedText type="small" style={[styles.teamPillText, { color: accent }]}>
+                {teamName}
+              </ThemedText>
+            </View>
+          )}
+          {consecutiveAbsences !== undefined &&
+            consecutiveAbsences >= CONSECUTIVE_ABSENCE_THRESHOLD && (
+              <ThemedText type="small" style={styles.absenceWarning}>
+                ⚠️ {consecutiveAbsences} kez üst üste devamsız
+              </ThemedText>
+            )}
+        </View>
+
+        {(dancer.parentPhone.length > 0 || onEdit || onDelete) && (
+          <View style={styles.actions}>
+            {dancer.parentPhone.length > 0 && (
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+                onPress={() => Linking.openURL(`tel:${dancer.parentPhone.replace(/\s+/g, '')}`)}>
+                <ThemedText style={styles.iconGlyph}>📞</ThemedText>
+              </Pressable>
+            )}
+            {onEdit && (
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+                onPress={onEdit}>
+                <ThemedText style={styles.iconGlyph}>✏️</ThemedText>
+              </Pressable>
+            )}
+            {onDelete && (
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.iconButton,
+                  styles.deleteButton,
+                  pressed && styles.pressed,
+                ]}
+                onPress={onDelete}>
+                <ThemedText style={styles.iconGlyph}>🗑️</ThemedText>
+              </Pressable>
+            )}
           </View>
         )}
-        {consecutiveAbsences !== undefined && consecutiveAbsences >= CONSECUTIVE_ABSENCE_THRESHOLD && (
-          <ThemedText type="small" style={styles.absenceWarning}>
-            ⚠️ {consecutiveAbsences} kez üst üste devamsız
-          </ThemedText>
-        )}
-      </View>
-
-      {(onViewAttendance || onViewPayments || dancer.parentPhone.length > 0 || onEdit || onDelete) && (
-        <View style={styles.actions}>
-          {onViewAttendance && (
-            <Pressable
-              hitSlop={8}
-              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-              onPress={onViewAttendance}>
-              <ThemedText style={styles.iconGlyph}>🕐</ThemedText>
-            </Pressable>
-          )}
-          {onViewPayments && (
-            <Pressable
-              hitSlop={8}
-              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-              onPress={onViewPayments}>
-              <ThemedText style={styles.iconGlyph}>💰</ThemedText>
-            </Pressable>
-          )}
-          {dancer.parentPhone.length > 0 && (
-            <Pressable
-              hitSlop={8}
-              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-              onPress={() => Linking.openURL(`tel:${dancer.parentPhone.replace(/\s+/g, '')}`)}>
-              <ThemedText style={styles.iconGlyph}>📞</ThemedText>
-            </Pressable>
-          )}
-          {onEdit && (
-            <Pressable
-              hitSlop={8}
-              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
-              onPress={onEdit}>
-              <ThemedText style={styles.iconGlyph}>✏️</ThemedText>
-            </Pressable>
-          )}
-          {onDelete && (
-            <Pressable
-              hitSlop={8}
-              style={({ pressed }) => [
-                styles.iconButton,
-                styles.deleteButton,
-                pressed && styles.pressed,
-              ]}
-              onPress={onDelete}>
-              <ThemedText style={styles.iconGlyph}>🗑️</ThemedText>
-            </Pressable>
-          )}
-        </View>
-      )}
-    </ThemedView>
+      </ThemedView>
+    </Pressable>
   );
 }
 
