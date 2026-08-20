@@ -88,6 +88,7 @@ export default function DancersScreen() {
   const [historyDancer, setHistoryDancer] = useState<Dancer | null>(null);
   const [paymentsDancer, setPaymentsDancer] = useState<Dancer | null>(null);
   const [searchInput, setSearchInput] = useState('');
+  const [viewMode, setViewMode] = useState<'list' | 'grouped'>('list');
   const [undoDancer, setUndoDancer] = useState<{
     dancer: Dancer;
     assignments: TeamAssignment[];
@@ -109,6 +110,31 @@ export default function DancersScreen() {
       .toLocaleLowerCase('tr')
       .includes(searchInput.trim().toLocaleLowerCase('tr')),
   );
+
+  const groupedSections: { key: string; title: string; dancers: Dancer[] }[] = [];
+  if (viewMode === 'grouped') {
+    const byTeamId = new Map<string, Dancer[]>();
+    for (const dancer of filteredDancers) {
+      const team = getTeamForDancer(assignments, teams, dancer.id, currentSeason);
+      const key = team ? team.id : 'unassigned';
+      const existing = byTeamId.get(key);
+      if (existing) {
+        existing.push(dancer);
+      } else {
+        byTeamId.set(key, [dancer]);
+      }
+    }
+    for (const team of teams) {
+      const teamDancers = byTeamId.get(team.id);
+      if (teamDancers && teamDancers.length > 0) {
+        groupedSections.push({ key: team.id, title: team.name, dancers: teamDancers });
+      }
+    }
+    const unassignedDancers = byTeamId.get('unassigned');
+    if (unassignedDancers && unassignedDancers.length > 0) {
+      groupedSections.push({ key: 'unassigned', title: 'Atanmamış', dancers: unassignedDancers });
+    }
+  }
 
   const parsedBirthDate = parseTurkishDate(birthDateInput);
   const parsedFee = Number(feeInput);
@@ -258,12 +284,34 @@ export default function DancersScreen() {
             style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
           />
 
+          <View style={styles.viewModeRow}>
+            <Pressable onPress={() => setViewMode('list')}>
+              <View style={[styles.viewModeChip, viewMode === 'list' && styles.viewModeChipSelected]}>
+                <ThemedText
+                  type="small"
+                  style={viewMode === 'list' ? styles.viewModeChipSelectedText : undefined}>
+                  📋 Liste
+                </ThemedText>
+              </View>
+            </Pressable>
+            <Pressable onPress={() => setViewMode('grouped')}>
+              <View
+                style={[styles.viewModeChip, viewMode === 'grouped' && styles.viewModeChipSelected]}>
+                <ThemedText
+                  type="small"
+                  style={viewMode === 'grouped' ? styles.viewModeChipSelectedText : undefined}>
+                  🎽 Ekibe Göre
+                </ThemedText>
+              </View>
+            </Pressable>
+          </View>
+
           <View style={styles.list}>
             {filteredDancers.length === 0 ? (
               <ThemedText type="small" themeColor="textSecondary">
                 Aramanla eşleşen dansçı yok.
               </ThemedText>
-            ) : (
+            ) : viewMode === 'list' ? (
               filteredDancers.map((dancer) => (
                 <DancerCard
                   key={dancer.id}
@@ -275,6 +323,30 @@ export default function DancersScreen() {
                   onViewAttendance={() => setHistoryDancer(dancer)}
                   onViewPayments={() => setPaymentsDancer(dancer)}
                 />
+              ))
+            ) : (
+              groupedSections.map((section) => (
+                <View key={section.key} style={styles.groupSection}>
+                  <ThemedText type="smallBold" themeColor="textSecondary" style={styles.groupTitle}>
+                    {section.title.toLocaleUpperCase('tr')} · {section.dancers.length}
+                  </ThemedText>
+                  <View style={styles.list}>
+                    {section.dancers.map((dancer) => (
+                      <DancerCard
+                        key={dancer.id}
+                        dancer={dancer}
+                        teamName={
+                          getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name
+                        }
+                        consecutiveAbsences={getConsecutiveAbsences(attendanceRecords, dancer.id)}
+                        onEdit={() => openEditForm(dancer)}
+                        onDelete={() => setDeletingDancer(dancer)}
+                        onViewAttendance={() => setHistoryDancer(dancer)}
+                        onViewPayments={() => setPaymentsDancer(dancer)}
+                      />
+                    ))}
+                  </View>
+                </View>
               ))
             )}
           </View>
@@ -677,6 +749,30 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.three,
+  },
+  viewModeRow: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+  viewModeChip: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  viewModeChipSelected: {
+    backgroundColor: PRIMARY_COLOR,
+  },
+  viewModeChipSelectedText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  groupSection: {
+    gap: Spacing.two,
+  },
+  groupTitle: {
+    letterSpacing: 0.5,
+    paddingHorizontal: Spacing.one,
   },
   modalOverlay: {
     flex: 1,
