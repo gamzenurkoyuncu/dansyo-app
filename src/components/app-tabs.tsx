@@ -48,6 +48,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="turkishlirasign.circle.fill" />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="costumes">
+        <NativeTabs.Trigger.Label>Kostüm</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="tshirt.fill" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="settings">
         <NativeTabs.Trigger.Label>Ayarlar</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="gearshape.fill" />

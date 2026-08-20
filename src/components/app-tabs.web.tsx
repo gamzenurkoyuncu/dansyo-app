@@ -40,6 +40,9 @@ export default function AppTabs() {
           <TabTrigger name="payments" href="/payments" asChild>
             <TabButton>Aidat</TabButton>
           </TabTrigger>
+          <TabTrigger name="costumes" href="/costumes" asChild>
+            <TabButton>Kostüm</TabButton>
+          </TabTrigger>
           <TabTrigger name="settings" href="/settings" asChild>
             <TabButton>Ayarlar</TabButton>
           </TabTrigger>

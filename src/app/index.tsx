@@ -165,6 +165,13 @@ export default function HomeScreen() {
 
           <QuickLinkCard href="/payments" emoji="💰" title="Aidat" subtitle="Ödemeleri takip et" />
 
+          <QuickLinkCard
+            href="/costumes"
+            emoji="👗"
+            title="Kostüm Listesi"
+            subtitle="Boy, kilo, beden bilgisi"
+          />
+
           <QuickLinkCard href="/settings" emoji="⚙️" title="Ayarlar" subtitle="Görünüm tercihleri" />
         </View>
       </View>
