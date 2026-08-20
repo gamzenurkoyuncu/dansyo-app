@@ -56,6 +56,13 @@ export default function DancersScreen() {
   const [deletingDancer, setDeletingDancer] = useState<Dancer | null>(null);
   const [historyDancer, setHistoryDancer] = useState<Dancer | null>(null);
   const [paymentsDancer, setPaymentsDancer] = useState<Dancer | null>(null);
+  const [searchInput, setSearchInput] = useState('');
+
+  const filteredDancers = dancers.filter((dancer) =>
+    `${dancer.firstName} ${dancer.lastName}`
+      .toLocaleLowerCase('tr')
+      .includes(searchInput.trim().toLocaleLowerCase('tr')),
+  );
 
   const parsedBirthDate = parseTurkishDate(birthDateInput);
   const parsedFee = Number(feeInput);
@@ -174,18 +181,32 @@ export default function DancersScreen() {
             </Pressable>
           </View>
 
+          <TextInput
+            value={searchInput}
+            onChangeText={setSearchInput}
+            placeholder="🔍 Dansçı ara"
+            placeholderTextColor={theme.textSecondary}
+            style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+          />
+
           <View style={styles.list}>
-            {dancers.map((dancer) => (
-              <DancerCard
-                key={dancer.id}
-                dancer={dancer}
-                teamName={getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name}
-                onEdit={() => openEditForm(dancer)}
-                onDelete={() => setDeletingDancer(dancer)}
-                onViewAttendance={() => setHistoryDancer(dancer)}
-                onViewPayments={() => setPaymentsDancer(dancer)}
-              />
-            ))}
+            {filteredDancers.length === 0 ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Aramanla eşleşen dansçı yok.
+              </ThemedText>
+            ) : (
+              filteredDancers.map((dancer) => (
+                <DancerCard
+                  key={dancer.id}
+                  dancer={dancer}
+                  teamName={getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name}
+                  onEdit={() => openEditForm(dancer)}
+                  onDelete={() => setDeletingDancer(dancer)}
+                  onViewAttendance={() => setHistoryDancer(dancer)}
+                  onViewPayments={() => setPaymentsDancer(dancer)}
+                />
+              ))
+            )}
           </View>
         </View>
       </ScrollView>

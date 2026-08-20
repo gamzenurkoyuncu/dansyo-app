@@ -84,6 +84,11 @@ export default function TeamsScreen() {
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
   const [assigningTeam, setAssigningTeam] = useState<Team | null>(null);
   const [historyTeam, setHistoryTeam] = useState<Team | null>(null);
+  const [searchInput, setSearchInput] = useState('');
+
+  const filteredTeams = teams.filter((team) =>
+    team.name.toLocaleLowerCase('tr').includes(searchInput.trim().toLocaleLowerCase('tr')),
+  );
 
   const availableSeasons = getAvailableSeasons(seasons, seasonRegions);
   const canCreateSeason =
@@ -281,8 +286,21 @@ export default function TeamsScreen() {
             </Pressable>
           </View>
 
+          <TextInput
+            value={searchInput}
+            onChangeText={setSearchInput}
+            placeholder="🔍 Ekip ara"
+            placeholderTextColor={theme.textSecondary}
+            style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+          />
+
           <View style={styles.list}>
-            {teams.map((team) => {
+            {filteredTeams.length === 0 && (
+              <ThemedText type="small" themeColor="textSecondary">
+                Aramanla eşleşen ekip yok.
+              </ThemedText>
+            )}
+            {filteredTeams.map((team) => {
               const attendanceSummary = getTeamAttendanceSummary(attendanceRecords, team.id);
               return (
                 <TeamCard
