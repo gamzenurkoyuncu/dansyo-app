@@ -15,10 +15,11 @@ import { DancerCard } from '@/components/dancer-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { Dancer, initialDancers, parseTurkishDate } from '@/data/mock-dancers';
+import { Dancer, formatTurkishDate, initialDancers, parseTurkishDate } from '@/data/mock-dancers';
 import { useTheme } from '@/hooks/use-theme';
 
 const PRIMARY_COLOR = '#3c87f7';
+const DANGER_COLOR = '#e05252';
 
 export default function DancersScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -30,20 +31,33 @@ export default function DancersScreen() {
 
   const [dancers, setDancers] = useState<Dancer[]>(initialDancers);
   const [isFormVisible, setFormVisible] = useState(false);
+  const [editingDancerId, setEditingDancerId] = useState<string | null>(null);
   const [firstNameInput, setFirstNameInput] = useState('');
   const [lastNameInput, setLastNameInput] = useState('');
   const [birthDateInput, setBirthDateInput] = useState('');
   const [schoolInput, setSchoolInput] = useState('');
+
+  const [deletingDancer, setDeletingDancer] = useState<Dancer | null>(null);
 
   const parsedBirthDate = parseTurkishDate(birthDateInput);
   const canSubmit =
     firstNameInput.trim().length > 0 && lastNameInput.trim().length > 0 && parsedBirthDate !== null;
 
   function openAddForm() {
+    setEditingDancerId(null);
     setFirstNameInput('');
     setLastNameInput('');
     setBirthDateInput('');
     setSchoolInput('');
+    setFormVisible(true);
+  }
+
+  function openEditForm(dancer: Dancer) {
+    setEditingDancerId(dancer.id);
+    setFirstNameInput(dancer.firstName);
+    setLastNameInput(dancer.lastName);
+    setBirthDateInput(formatTurkishDate(dancer.birthDate));
+    setSchoolInput(dancer.school);
     setFormVisible(true);
   }
 
@@ -54,16 +68,38 @@ export default function DancersScreen() {
   function handleSaveDancer() {
     if (!canSubmit || !parsedBirthDate) return;
 
-    const newDancer: Dancer = {
-      id: Date.now().toString(),
-      firstName: firstNameInput.trim(),
-      lastName: lastNameInput.trim(),
-      birthDate: parsedBirthDate,
-      school: schoolInput.trim(),
-    };
+    if (editingDancerId) {
+      setDancers((prev) =>
+        prev.map((dancer) =>
+          dancer.id === editingDancerId
+            ? {
+                ...dancer,
+                firstName: firstNameInput.trim(),
+                lastName: lastNameInput.trim(),
+                birthDate: parsedBirthDate,
+                school: schoolInput.trim(),
+              }
+            : dancer,
+        ),
+      );
+    } else {
+      const newDancer: Dancer = {
+        id: Date.now().toString(),
+        firstName: firstNameInput.trim(),
+        lastName: lastNameInput.trim(),
+        birthDate: parsedBirthDate,
+        school: schoolInput.trim(),
+      };
+      setDancers((prev) => [...prev, newDancer]);
+    }
 
-    setDancers((prev) => [...prev, newDancer]);
     setFormVisible(false);
+  }
+
+  function handleConfirmDelete() {
+    if (!deletingDancer) return;
+    setDancers((prev) => prev.filter((dancer) => dancer.id !== deletingDancer.id));
+    setDeletingDancer(null);
   }
 
   const contentPlatformStyle = Platform.select({
@@ -103,7 +139,12 @@ export default function DancersScreen() {
 
           <View style={styles.list}>
             {dancers.map((dancer) => (
-              <DancerCard key={dancer.id} dancer={dancer} />
+              <DancerCard
+                key={dancer.id}
+                dancer={dancer}
+                onEdit={() => openEditForm(dancer)}
+                onDelete={() => setDeletingDancer(dancer)}
+              />
             ))}
           </View>
         </View>
@@ -120,12 +161,14 @@ export default function DancersScreen() {
           <ThemedView type="backgroundElement" style={styles.modalCard}>
             <View style={styles.formHeader}>
               <View style={styles.formIcon}>
-                <ThemedText style={styles.formIconGlyph}>➕</ThemedText>
+                <ThemedText style={styles.formIconGlyph}>{editingDancerId ? '✏️' : '➕'}</ThemedText>
               </View>
               <View style={styles.formHeaderText}>
-                <ThemedText type="subtitle">Yeni Dansçı</ThemedText>
+                <ThemedText type="subtitle">
+                  {editingDancerId ? 'Dansçıyı Düzenle' : 'Yeni Dansçı'}
+                </ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">
-                  Dansçı bilgilerini gir
+                  {editingDancerId ? 'Bilgileri güncelle' : 'Dansçı bilgilerini gir'}
                 </ThemedText>
               </View>
               <Pressable
@@ -200,7 +243,9 @@ export default function DancersScreen() {
               onPress={handleSaveDancer}>
               <View
                 style={[styles.primaryButton, styles.primaryButtonFull, !canSubmit && styles.disabledButton]}>
-                <ThemedText style={styles.primaryButtonText}>Dansçı Ekle</ThemedText>
+                <ThemedText style={styles.primaryButtonText}>
+                  {editingDancerId ? 'Kaydet' : 'Dansçı Ekle'}
+                </ThemedText>
               </View>
             </Pressable>
 
@@ -211,6 +256,34 @@ export default function DancersScreen() {
             </Pressable>
           </ThemedView>
         </KeyboardAvoidingView>
+      </Modal>
+
+      <Modal
+        visible={deletingDancer !== null}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setDeletingDancer(null)}>
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView type="backgroundElement" style={styles.modalCard}>
+            <ThemedText type="subtitle">Dansçıyı Sil</ThemedText>
+            <ThemedText>
+              &quot;{deletingDancer?.firstName} {deletingDancer?.lastName}&quot; kaydını silmek
+              istediğine emin misin? Bu işlem geri alınamaz.
+            </ThemedText>
+            <View style={styles.modalActions}>
+              <Pressable
+                style={({ pressed }) => pressed && styles.pressed}
+                onPress={() => setDeletingDancer(null)}>
+                <ThemedText themeColor="textSecondary">Vazgeç</ThemedText>
+              </Pressable>
+              <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={handleConfirmDelete}>
+                <View style={styles.dangerButton}>
+                  <ThemedText style={styles.primaryButtonText}>Sil</ThemedText>
+                </View>
+              </Pressable>
+            </View>
+          </ThemedView>
+        </ThemedView>
       </Modal>
     </>
   );
@@ -328,6 +401,19 @@ const styles = StyleSheet.create({
   cancelButton: {
     alignItems: 'center',
     paddingVertical: Spacing.one,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: Spacing.four,
+    paddingTop: Spacing.two,
+  },
+  dangerButton: {
+    backgroundColor: DANGER_COLOR,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
   },
   disabledButton: {
     opacity: 0.4,

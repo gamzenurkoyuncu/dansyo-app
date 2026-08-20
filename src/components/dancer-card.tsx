@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
@@ -8,9 +8,11 @@ import { Dancer, getAge } from '@/data/mock-dancers';
 
 type DancerCardProps = {
   dancer: Dancer;
+  onEdit?: () => void;
+  onDelete?: () => void;
 };
 
-export function DancerCard({ dancer }: DancerCardProps) {
+export function DancerCard({ dancer, onEdit, onDelete }: DancerCardProps) {
   const accent = getAccentColor(dancer.id);
   const age = getAge(dancer.birthDate);
   const initials = `${dancer.firstName.charAt(0)}${dancer.lastName.charAt(0)}`.toUpperCase();
@@ -30,6 +32,31 @@ export function DancerCard({ dancer }: DancerCardProps) {
           {dancer.school ? ` · ${dancer.school}` : ''}
         </ThemedText>
       </View>
+
+      {(onEdit || onDelete) && (
+        <View style={styles.actions}>
+          {onEdit && (
+            <Pressable
+              hitSlop={8}
+              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+              onPress={onEdit}>
+              <ThemedText style={styles.iconGlyph}>✏️</ThemedText>
+            </Pressable>
+          )}
+          {onDelete && (
+            <Pressable
+              hitSlop={8}
+              style={({ pressed }) => [
+                styles.iconButton,
+                styles.deleteButton,
+                pressed && styles.pressed,
+              ]}
+              onPress={onDelete}>
+              <ThemedText style={styles.iconGlyph}>🗑️</ThemedText>
+            </Pressable>
+          )}
+        </View>
+      )}
     </ThemedView>
   );
 }
@@ -59,5 +86,27 @@ const styles = StyleSheet.create({
   },
   name: {
     fontWeight: '700',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+  iconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  deleteButton: {
+    backgroundColor: 'rgba(224,82,82,0.14)',
+  },
+  iconGlyph: {
+    fontSize: 14,
+    lineHeight: 16,
+  },
+  pressed: {
+    opacity: 0.6,
   },
 });
