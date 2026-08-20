@@ -8,6 +8,7 @@ import { Team } from '@/data/mock-teams';
 type TeamCardProps = {
   team: Team;
   regionName?: string;
+  instructorName?: string;
   dancerCount: number;
   scheduleSummary?: string;
   onEdit?: () => void;
@@ -26,6 +27,7 @@ export function getAccentColor(id: string) {
 export function TeamCard({
   team,
   regionName,
+  instructorName,
   dancerCount,
   scheduleSummary,
   onEdit,
@@ -104,6 +106,12 @@ export function TeamCard({
             👥 {dancerCount} dansçı
           </ThemedText>
         </View>
+
+        {instructorName && (
+          <ThemedText type="small" themeColor="textSecondary">
+            🧑‍🏫 {instructorName}
+          </ThemedText>
+        )}
 
         {scheduleSummary && (
           <ThemedText type="small" themeColor="textSecondary">

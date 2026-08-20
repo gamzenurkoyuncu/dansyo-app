@@ -9,6 +9,12 @@ export type SeasonRegion = {
   regionName: string;
 };
 
+export type SeasonInstructor = {
+  teamId: string;
+  season: string;
+  instructorName: string;
+};
+
 export type TeamAssignment = {
   dancerId: string;
   teamId: string;
@@ -86,6 +92,11 @@ export const initialSeasonRegions: SeasonRegion[] = [
   { teamId: '4', season: PREVIOUS_SEASON, regionName: 'Karadeniz' },
 ];
 
+export const initialSeasonInstructors: SeasonInstructor[] = [
+  { teamId: '1', season: CURRENT_SEASON, instructorName: 'Ayşe Hoca' },
+  { teamId: '2', season: CURRENT_SEASON, instructorName: 'Mehmet Hoca' },
+];
+
 export const initialTeamAssignments: TeamAssignment[] = [
   { dancerId: '1', teamId: '2', season: CURRENT_SEASON },
   { dancerId: '2', teamId: '2', season: CURRENT_SEASON },
@@ -133,6 +144,28 @@ export function getRegionForSeason(
   season: string = CURRENT_SEASON,
 ) {
   return seasonRegions.find((r) => r.teamId === teamId && r.season === season)?.regionName;
+}
+
+export function getInstructorForSeason(
+  instructors: SeasonInstructor[],
+  teamId: string,
+  season: string,
+): string | undefined {
+  return instructors.find((instructor) => instructor.teamId === teamId && instructor.season === season)
+    ?.instructorName;
+}
+
+export function setInstructorForSeason(
+  instructors: SeasonInstructor[],
+  teamId: string,
+  season: string,
+  instructorName: string,
+): SeasonInstructor[] {
+  const withoutRecord = instructors.filter(
+    (instructor) => !(instructor.teamId === teamId && instructor.season === season),
+  );
+  if (!instructorName.trim()) return withoutRecord;
+  return [...withoutRecord, { teamId, season, instructorName: instructorName.trim() }];
 }
 
 export function getAvailableSeasons(seasons: string[], seasonRegions: SeasonRegion[]): string[] {

@@ -24,11 +24,13 @@ import {
   getAssignedDancerIds,
   getAvailableSeasons,
   getNextSeasonLabel,
+  getInstructorForSeason,
   getPracticeSlotsForTeam,
   getRegionForSeason,
   getTeamDancerCount,
   getTeamForDancer,
   isValidTime,
+  setInstructorForSeason,
   Team,
   unassignDancer,
 } from '@/data/mock-teams';
@@ -51,6 +53,8 @@ export default function TeamsScreen() {
     setTeams,
     seasonRegions,
     setSeasonRegions,
+    seasonInstructors,
+    setSeasonInstructors,
     dancers,
     assignments,
     setAssignments,
@@ -70,6 +74,7 @@ export default function TeamsScreen() {
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [nameInput, setNameInput] = useState('');
   const [regionInput, setRegionInput] = useState('');
+  const [instructorInput, setInstructorInput] = useState('');
   const [slotDrafts, setSlotDrafts] = useState<
     { day: DayOfWeek; startTime: string; endTime: string }[]
   >([]);
@@ -123,6 +128,7 @@ export default function TeamsScreen() {
     setEditingTeamId(null);
     setNameInput('');
     setRegionInput('');
+    setInstructorInput('');
     setSlotDrafts([]);
     setFormVisible(true);
   }
@@ -131,6 +137,7 @@ export default function TeamsScreen() {
     setEditingTeamId(team.id);
     setNameInput(team.name);
     setRegionInput(getRegionForSeason(seasonRegions, team.id, selectedSeason) ?? '');
+    setInstructorInput(getInstructorForSeason(seasonInstructors, team.id, selectedSeason) ?? '');
     setSlotDrafts(
       getPracticeSlotsForTeam(practiceSlots, team.id, selectedSeason).map((slot) => ({
         day: slot.day,
@@ -192,6 +199,10 @@ export default function TeamsScreen() {
       ]);
     }
 
+    setSeasonInstructors((prev) =>
+      setInstructorForSeason(prev, teamId, selectedSeason, instructorInput),
+    );
+
     setPracticeSlots((prev) => {
       const withoutTeamSeason = prev.filter(
         (slot) => !(slot.teamId === teamId && slot.season === selectedSeason),
@@ -221,6 +232,7 @@ export default function TeamsScreen() {
     const teamId = deletingTeam.id;
     setTeams((prev) => prev.filter((team) => team.id !== teamId));
     setSeasonRegions((prev) => prev.filter((region) => region.teamId !== teamId));
+    setSeasonInstructors((prev) => prev.filter((instructor) => instructor.teamId !== teamId));
     setAssignments((prev) => prev.filter((assignment) => assignment.teamId !== teamId));
     setPracticeSlots((prev) => prev.filter((slot) => slot.teamId !== teamId));
     setDeletingTeam(null);
@@ -273,6 +285,7 @@ export default function TeamsScreen() {
                 key={team.id}
                 team={team}
                 regionName={getRegionForSeason(seasonRegions, team.id, selectedSeason)}
+                instructorName={getInstructorForSeason(seasonInstructors, team.id, selectedSeason)}
                 dancerCount={getTeamDancerCount(assignments, team.id, selectedSeason)}
                 scheduleSummary={getPracticeSlotsForTeam(practiceSlots, team.id, selectedSeason)
                   .map(formatPracticeSlot)
@@ -452,6 +465,19 @@ export default function TeamsScreen() {
                 value={regionInput}
                 onChangeText={setRegionInput}
                 placeholder="örn. Zeybek"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                🧑‍🏫 {selectedSeason} Sezonu Eğitmeni
+              </ThemedText>
+              <TextInput
+                value={instructorInput}
+                onChangeText={setInstructorInput}
+                placeholder="örn. Ayşe Hoca"
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
               />
@@ -684,6 +710,7 @@ export default function TeamsScreen() {
               {historyTeam &&
                 availableSeasons.map((season) => {
                   const region = getRegionForSeason(seasonRegions, historyTeam.id, season);
+                  const instructor = getInstructorForSeason(seasonInstructors, historyTeam.id, season);
                   const dancerNames = getAssignedDancerIds(assignments, historyTeam.id, season)
                     .map((dancerId) => dancers.find((dancer) => dancer.id === dancerId))
                     .filter((dancer) => dancer !== undefined)
@@ -706,6 +733,9 @@ export default function TeamsScreen() {
                           {region ?? 'Yöre atanmadı'}
                         </ThemedText>
                       </View>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        🧑‍🏫 {instructor ?? 'Eğitmen atanmadı'}
+                      </ThemedText>
                       <ThemedText type="small" themeColor="textSecondary">
                         {dancerNames.length > 0 ? dancerNames.join(', ') : 'Dansçı atanmadı'}
                       </ThemedText>

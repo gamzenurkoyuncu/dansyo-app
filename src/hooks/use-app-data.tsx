@@ -7,11 +7,13 @@ import {
   CURRENT_SEASON,
   initialAttendanceRecords,
   initialPracticeSlots,
+  initialSeasonInstructors,
   initialSeasonRegions,
   initialSeasons,
   initialTeamAssignments,
   initialTeams,
   PracticeSlot,
+  SeasonInstructor,
   SeasonRegion,
   Team,
   TeamAssignment,
@@ -26,6 +28,8 @@ type AppDataContextValue = {
   setTeams: Dispatch<SetStateAction<Team[]>>;
   seasonRegions: SeasonRegion[];
   setSeasonRegions: Dispatch<SetStateAction<SeasonRegion[]>>;
+  seasonInstructors: SeasonInstructor[];
+  setSeasonInstructors: Dispatch<SetStateAction<SeasonInstructor[]>>;
   dancers: Dancer[];
   setDancers: Dispatch<SetStateAction<Dancer[]>>;
   assignments: TeamAssignment[];
@@ -48,6 +52,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [themePreference, setThemePreference] = useState<ThemePreference>('system');
   const [teams, setTeams] = useState<Team[]>(initialTeams);
   const [seasonRegions, setSeasonRegions] = useState<SeasonRegion[]>(initialSeasonRegions);
+  const [seasonInstructors, setSeasonInstructors] =
+    useState<SeasonInstructor[]>(initialSeasonInstructors);
   const [dancers, setDancers] = useState<Dancer[]>(initialDancers);
   const [assignments, setAssignments] = useState<TeamAssignment[]>(initialTeamAssignments);
   const [seasons, setSeasons] = useState<string[]>(initialSeasons);
@@ -66,6 +72,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setTeams,
         seasonRegions,
         setSeasonRegions,
+        seasonInstructors,
+        setSeasonInstructors,
         dancers,
         setDancers,
         assignments,
