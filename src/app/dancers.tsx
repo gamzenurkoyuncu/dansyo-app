@@ -27,6 +27,7 @@ import {
 } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
+import { shareText } from '@/utils/share';
 
 const PRIMARY_COLOR = '#3c87f7';
 const DANGER_COLOR = '#e05252';
@@ -241,6 +242,22 @@ export default function DancersScreen() {
     setUndoDancer(null);
   }
 
+  function handleShare() {
+    const lines = filteredDancers.map((dancer) => {
+      const age = getAge(dancer.birthDate);
+      const teamName = getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name;
+      const parts = [
+        `${dancer.firstName} ${dancer.lastName}`,
+        age !== null ? `${age} yaş` : null,
+        teamName,
+        dancer.school || null,
+      ].filter((part): part is string => Boolean(part));
+      return `- ${parts.join(' · ')}`;
+    });
+    const message = `DansYo - Dansçılar (${currentSeason})\n\n${lines.join('\n')}`;
+    shareText(message);
+  }
+
   const contentPlatformStyle = Platform.select({
     android: {
       paddingTop: insets.top,
@@ -269,11 +286,19 @@ export default function DancersScreen() {
               </ThemedText>
             </View>
 
-            <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={openAddForm}>
-              <View style={styles.addButton}>
-                <ThemedText style={styles.addButtonText}>+ Dansçı Ekle</ThemedText>
-              </View>
-            </Pressable>
+            <View style={styles.headerActions}>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}
+                onPress={handleShare}>
+                <ThemedText style={styles.shareButtonGlyph}>📤</ThemedText>
+              </Pressable>
+              <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={openAddForm}>
+                <View style={styles.addButton}>
+                  <ThemedText style={styles.addButtonText}>+ Dansçı Ekle</ThemedText>
+                </View>
+              </Pressable>
+            </View>
           </View>
 
           <UndoDancerBanner dancer={bannerDancer} onUndo={handleUndoDelete} />
@@ -783,6 +808,22 @@ const styles = StyleSheet.create({
   },
   headerText: {
     gap: Spacing.half,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
+  shareButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  shareButtonGlyph: {
+    fontSize: 16,
   },
   addButton: {
     backgroundColor: PRIMARY_COLOR,

@@ -9,6 +9,9 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { getAssignedDancerIds } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
+import { shareText } from '@/utils/share';
+
+const PRIMARY_COLOR = '#3c87f7';
 
 export default function CostumesScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -28,6 +31,21 @@ export default function CostumesScreen() {
         .map((dancerId) => dancers.find((dancer) => dancer.id === dancerId))
         .filter((dancer) => dancer !== undefined)
     : [];
+
+  function handleShare() {
+    if (!selectedTeam || teamDancers.length === 0) return;
+    const lines = teamDancers.map((dancer) => {
+      const parts = [
+        `${dancer.firstName} ${dancer.lastName}`,
+        dancer.height ? `Boy: ${dancer.height} cm` : null,
+        dancer.weight ? `Kilo: ${dancer.weight} kg` : null,
+        dancer.costumeSize ? `Beden: ${dancer.costumeSize}` : null,
+      ].filter((part): part is string => Boolean(part));
+      return `- ${parts.join(' · ')}`;
+    });
+    const message = `DansYo - Kostüm Listesi - ${selectedTeam.name} (${currentSeason})\n\n${lines.join('\n')}`;
+    shareText(message);
+  }
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -94,6 +112,14 @@ export default function CostumesScreen() {
             </ThemedText>
           ) : (
             <>
+              <Pressable
+                style={({ pressed }) => pressed && styles.pressed}
+                onPress={handleShare}>
+                <View style={styles.shareButton}>
+                  <ThemedText style={styles.shareButtonText}>📤 Listeyi Paylaş</ThemedText>
+                </View>
+              </Pressable>
+
               <View style={styles.tableHeader}>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.nameCol}>
                   Dansçı
@@ -169,6 +195,22 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.two,
+  },
+  pressed: {
+    opacity: 0.7,
+  },
+  shareButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: PRIMARY_COLOR,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
+    marginBottom: Spacing.one,
+  },
+  shareButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 14,
   },
   tableHeader: {
     flexDirection: 'row',
