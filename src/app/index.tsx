@@ -1,33 +1,12 @@
-import * as Device from 'expo-device';
 import { Href, Link } from 'expo-router';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+import { useAppData } from '@/hooks/use-app-data';
+import { useTheme } from '@/hooks/use-theme';
 
 type QuickLinkCardProps = {
   href: Href;
@@ -60,87 +39,143 @@ function QuickLinkCard({ href, emoji, title, subtitle }: QuickLinkCardProps) {
 }
 
 export default function HomeScreen() {
+  const safeAreaInsets = useSafeAreaInsets();
+  const insets = {
+    ...safeAreaInsets,
+    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
+  };
+  const theme = useTheme();
+  const { teams, dancers, currentSeason } = useAppData();
+
+  const contentPlatformStyle = Platform.select({
+    android: {
+      paddingTop: insets.top,
+      paddingLeft: insets.left,
+      paddingRight: insets.right,
+      paddingBottom: insets.bottom,
+    },
+    web: {
+      paddingTop: Spacing.six,
+      paddingBottom: Spacing.four,
+    },
+  });
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
+    <ScrollView
+      style={[styles.scrollView, { backgroundColor: theme.background }]}
+      contentInset={insets}
+      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+      <View style={styles.container}>
+        <View style={styles.heroSection}>
+          <ThemedText style={styles.heroEmoji}>🩰</ThemedText>
           <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
+            DansYo
           </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            Dans okulu yönetimi
+          </ThemedText>
+        </View>
+
+        <ThemedView type="backgroundElement" style={styles.summaryCard}>
+          <View style={styles.summaryItem}>
+            <ThemedText type="subtitle" style={styles.summaryValue}>
+              {teams.length}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              Ekip
+            </ThemedText>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <ThemedText type="subtitle" style={styles.summaryValue}>
+              {dancers.length}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              Dansçı
+            </ThemedText>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <ThemedText type="subtitle" style={styles.summaryValue}>
+              {currentSeason}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              Aktif sezon
+            </ThemedText>
+          </View>
         </ThemedView>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
+        <View style={styles.linkList}>
+          <QuickLinkCard
+            href="/teams"
+            emoji="💃"
+            title="Ekip Listesi"
+            subtitle="Ekipleri görüntüle, düzenle"
           />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
+
+          <QuickLinkCard
+            href="/dancers"
+            emoji="🧑‍🤝‍🧑"
+            title="Dansçılar"
+            subtitle="Dansçıları görüntüle, ekle"
           />
-        </ThemedView>
 
-        <QuickLinkCard
-          href="/teams"
-          emoji="💃"
-          title="Ekip Listesi"
-          subtitle="Ekipleri görüntüle, düzenle"
-        />
+          <QuickLinkCard href="/attendance" emoji="✅" title="Yoklama" subtitle="Yoklama al" />
 
-        <QuickLinkCard
-          href="/dancers"
-          emoji="🧑‍🤝‍🧑"
-          title="Dansçılar"
-          subtitle="Dansçıları görüntüle, ekle"
-        />
-
-        <QuickLinkCard href="/attendance" emoji="✅" title="Yoklama" subtitle="Yoklama al" />
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          <QuickLinkCard href="/settings" emoji="⚙️" title="Ayarlar" subtitle="Görünüm tercihleri" />
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
   },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
+  contentContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  container: {
     maxWidth: MaxContentWidth,
+    flexGrow: 1,
+    width: '100%',
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.four,
   },
   heroSection: {
     alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    gap: Spacing.one,
+    paddingTop: Spacing.six,
+  },
+  heroEmoji: {
+    fontSize: 40,
   },
   title: {
     textAlign: 'center',
   },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
+  summaryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
     paddingVertical: Spacing.four,
     borderRadius: Spacing.four,
+  },
+  summaryItem: {
+    alignItems: 'center',
+    gap: Spacing.half,
+  },
+  summaryValue: {
+    fontSize: 20,
+  },
+  summaryDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 32,
+    backgroundColor: 'rgba(128,128,128,0.3)',
+  },
+  linkList: {
+    gap: Spacing.three,
   },
   quickLinkPressable: {
     alignSelf: 'stretch',
