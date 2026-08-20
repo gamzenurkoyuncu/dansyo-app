@@ -80,6 +80,9 @@ export default function DancersScreen() {
   const [feeInput, setFeeInput] = useState('');
   const [parentNameInput, setParentNameInput] = useState('');
   const [parentPhoneInput, setParentPhoneInput] = useState('');
+  const [heightInput, setHeightInput] = useState('');
+  const [weightInput, setWeightInput] = useState('');
+  const [costumeSizeInput, setCostumeSizeInput] = useState('');
 
   const [deletingDancer, setDeletingDancer] = useState<Dancer | null>(null);
   const [historyDancer, setHistoryDancer] = useState<Dancer | null>(null);
@@ -125,6 +128,9 @@ export default function DancersScreen() {
     setFeeInput('');
     setParentNameInput('');
     setParentPhoneInput('');
+    setHeightInput('');
+    setWeightInput('');
+    setCostumeSizeInput('');
     setFormVisible(true);
   }
 
@@ -137,6 +143,9 @@ export default function DancersScreen() {
     setFeeInput(String(dancer.monthlyFee));
     setParentNameInput(dancer.parentName);
     setParentPhoneInput(dancer.parentPhone);
+    setHeightInput(dancer.height);
+    setWeightInput(dancer.weight);
+    setCostumeSizeInput(dancer.costumeSize);
     setFormVisible(true);
   }
 
@@ -160,6 +169,9 @@ export default function DancersScreen() {
                 monthlyFee: parsedFee,
                 parentName: parentNameInput.trim(),
                 parentPhone: parentPhoneInput.trim(),
+                height: heightInput.trim(),
+                weight: weightInput.trim(),
+                costumeSize: costumeSizeInput.trim(),
               }
             : dancer,
         ),
@@ -174,6 +186,9 @@ export default function DancersScreen() {
         monthlyFee: parsedFee,
         parentName: parentNameInput.trim(),
         parentPhone: parentPhoneInput.trim(),
+        height: heightInput.trim(),
+        weight: weightInput.trim(),
+        costumeSize: costumeSizeInput.trim(),
       };
       setDancers((prev) => [...prev, newDancer]);
     }
@@ -394,6 +409,47 @@ export default function DancersScreen() {
                 onChangeText={setParentPhoneInput}
                 placeholder="örn. 0532 111 22 33"
                 keyboardType="phone-pad"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                📏 Boy (cm, opsiyonel)
+              </ThemedText>
+              <TextInput
+                value={heightInput}
+                onChangeText={setHeightInput}
+                placeholder="örn. 138"
+                keyboardType="numeric"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                ⚖️ Kilo (kg, opsiyonel)
+              </ThemedText>
+              <TextInput
+                value={weightInput}
+                onChangeText={setWeightInput}
+                placeholder="örn. 32"
+                keyboardType="numeric"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                👗 Kostüm Bedeni (opsiyonel)
+              </ThemedText>
+              <TextInput
+                value={costumeSizeInput}
+                onChangeText={setCostumeSizeInput}
+                placeholder="örn. S, 8 Yaş"
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
               />

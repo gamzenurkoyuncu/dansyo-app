@@ -7,6 +7,9 @@ export type Dancer = {
   monthlyFee: number;
   parentName: string;
   parentPhone: string;
+  height: string; // cm, opsiyonel serbest metin
+  weight: string; // kg, opsiyonel serbest metin
+  costumeSize: string; // opsiyonel serbest metin, örn. 'S', '8 Yaş'
 };
 
 export const initialDancers: Dancer[] = [
@@ -19,6 +22,9 @@ export const initialDancers: Dancer[] = [
     monthlyFee: 800,
     parentName: 'Fatma Yıldız',
     parentPhone: '0532 111 22 33',
+    height: '138',
+    weight: '32',
+    costumeSize: '8 Yaş',
   },
   {
     id: '2',
@@ -29,6 +35,9 @@ export const initialDancers: Dancer[] = [
     monthlyFee: 800,
     parentName: 'Ahmet Demir',
     parentPhone: '0533 222 33 44',
+    height: '152',
+    weight: '44',
+    costumeSize: 'M',
   },
   {
     id: '3',
@@ -39,6 +48,9 @@ export const initialDancers: Dancer[] = [
     monthlyFee: 900,
     parentName: '',
     parentPhone: '',
+    height: '',
+    weight: '',
+    costumeSize: '',
   },
   {
     id: '4',
@@ -49,6 +61,9 @@ export const initialDancers: Dancer[] = [
     monthlyFee: 1000,
     parentName: '',
     parentPhone: '',
+    height: '',
+    weight: '',
+    costumeSize: '',
   },
 ];
 
