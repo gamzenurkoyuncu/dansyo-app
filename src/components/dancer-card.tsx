@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
@@ -60,7 +60,7 @@ export function DancerCard({
         )}
       </View>
 
-      {(onViewAttendance || onViewPayments || onEdit || onDelete) && (
+      {(onViewAttendance || onViewPayments || dancer.parentPhone.length > 0 || onEdit || onDelete) && (
         <View style={styles.actions}>
           {onViewAttendance && (
             <Pressable
@@ -76,6 +76,14 @@ export function DancerCard({
               style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
               onPress={onViewPayments}>
               <ThemedText style={styles.iconGlyph}>💰</ThemedText>
+            </Pressable>
+          )}
+          {dancer.parentPhone.length > 0 && (
+            <Pressable
+              hitSlop={8}
+              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+              onPress={() => Linking.openURL(`tel:${dancer.parentPhone.replace(/\s+/g, '')}`)}>
+              <ThemedText style={styles.iconGlyph}>📞</ThemedText>
             </Pressable>
           )}
           {onEdit && (
