@@ -6,9 +6,13 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { Dancer, getAge } from '@/data/mock-dancers';
 
+const DANGER_COLOR = '#e05252';
+const CONSECUTIVE_ABSENCE_THRESHOLD = 3;
+
 type DancerCardProps = {
   dancer: Dancer;
   teamName?: string;
+  consecutiveAbsences?: number;
   onEdit?: () => void;
   onDelete?: () => void;
   onViewAttendance?: () => void;
@@ -18,6 +22,7 @@ type DancerCardProps = {
 export function DancerCard({
   dancer,
   teamName,
+  consecutiveAbsences,
   onEdit,
   onDelete,
   onViewAttendance,
@@ -47,6 +52,11 @@ export function DancerCard({
               {teamName}
             </ThemedText>
           </View>
+        )}
+        {consecutiveAbsences !== undefined && consecutiveAbsences >= CONSECUTIVE_ABSENCE_THRESHOLD && (
+          <ThemedText type="small" style={styles.absenceWarning}>
+            ⚠️ {consecutiveAbsences} kez üst üste devamsız
+          </ThemedText>
         )}
       </View>
 
@@ -129,6 +139,11 @@ const styles = StyleSheet.create({
   },
   teamPillText: {
     fontWeight: '700',
+  },
+  absenceWarning: {
+    color: DANGER_COLOR,
+    fontWeight: '700',
+    marginTop: Spacing.half,
   },
   actions: {
     flexDirection: 'row',

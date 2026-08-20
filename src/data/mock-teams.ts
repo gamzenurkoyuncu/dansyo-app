@@ -299,6 +299,16 @@ export function getAttendanceForDancer(
     .sort((a, b) => b.date.localeCompare(a.date));
 }
 
+export function getConsecutiveAbsences(records: AttendanceRecord[], dancerId: string): number {
+  const dancerRecords = getAttendanceForDancer(records, dancerId);
+  let count = 0;
+  for (const record of dancerRecords) {
+    if (record.present) break;
+    count += 1;
+  }
+  return count;
+}
+
 export type AttendanceSummary = {
   total: number;
   present: number;

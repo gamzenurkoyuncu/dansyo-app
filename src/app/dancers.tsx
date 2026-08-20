@@ -17,7 +17,12 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { Dancer, formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
 import { formatTurkishMonth, getPaymentsForDancer } from '@/data/mock-payments';
-import { getAttendanceForDancer, getAttendanceSummary, getTeamForDancer } from '@/data/mock-teams';
+import {
+  getAttendanceForDancer,
+  getAttendanceSummary,
+  getConsecutiveAbsences,
+  getTeamForDancer,
+} from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -200,6 +205,7 @@ export default function DancersScreen() {
                   key={dancer.id}
                   dancer={dancer}
                   teamName={getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name}
+                  consecutiveAbsences={getConsecutiveAbsences(attendanceRecords, dancer.id)}
                   onEdit={() => openEditForm(dancer)}
                   onDelete={() => setDeletingDancer(dancer)}
                   onViewAttendance={() => setHistoryDancer(dancer)}
