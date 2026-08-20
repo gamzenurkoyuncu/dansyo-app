@@ -16,12 +16,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { Dancer, formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
-import { getTeamForDancer } from '@/data/mock-teams';
+import { getAttendanceForDancer, getTeamForDancer } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
 const PRIMARY_COLOR = '#3c87f7';
 const DANGER_COLOR = '#e05252';
+const SUCCESS_COLOR = '#27ae60';
 
 export default function DancersScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -31,7 +32,8 @@ export default function DancersScreen() {
   };
   const theme = useTheme();
 
-  const { dancers, setDancers, teams, assignments, setAssignments, currentSeason } = useAppData();
+  const { dancers, setDancers, teams, assignments, setAssignments, currentSeason, attendanceRecords } =
+    useAppData();
   const [isFormVisible, setFormVisible] = useState(false);
   const [editingDancerId, setEditingDancerId] = useState<string | null>(null);
   const [firstNameInput, setFirstNameInput] = useState('');
@@ -40,6 +42,7 @@ export default function DancersScreen() {
   const [schoolInput, setSchoolInput] = useState('');
 
   const [deletingDancer, setDeletingDancer] = useState<Dancer | null>(null);
+  const [historyDancer, setHistoryDancer] = useState<Dancer | null>(null);
 
   const parsedBirthDate = parseTurkishDate(birthDateInput);
   const canSubmit =
@@ -149,6 +152,7 @@ export default function DancersScreen() {
                 teamName={getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name}
                 onEdit={() => openEditForm(dancer)}
                 onDelete={() => setDeletingDancer(dancer)}
+                onViewAttendance={() => setHistoryDancer(dancer)}
               />
             ))}
           </View>
@@ -290,6 +294,68 @@ export default function DancersScreen() {
           </ThemedView>
         </ThemedView>
       </Modal>
+
+      <Modal
+        visible={historyDancer !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setHistoryDancer(null)}>
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView type="backgroundElement" style={styles.modalCard}>
+            <View style={styles.formHeader}>
+              <View style={styles.formIcon}>
+                <ThemedText style={styles.formIconGlyph}>🕐</ThemedText>
+              </View>
+              <View style={styles.formHeaderText}>
+                <ThemedText type="subtitle">
+                  {historyDancer?.firstName} {historyDancer?.lastName}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Yoklama geçmişi
+                </ThemedText>
+              </View>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+                onPress={() => setHistoryDancer(null)}>
+                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.attendanceList}>
+              {!historyDancer || getAttendanceForDancer(attendanceRecords, historyDancer.id).length === 0 ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Henüz yoklama kaydı yok.
+                </ThemedText>
+              ) : (
+                getAttendanceForDancer(attendanceRecords, historyDancer.id).map((record) => (
+                  <View key={record.id} style={styles.attendanceRow}>
+                    <View>
+                      <ThemedText>{formatTurkishDate(record.date)}</ThemedText>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {teams.find((team) => team.id === record.teamId)?.name ?? 'Bilinmeyen ekip'}
+                      </ThemedText>
+                    </View>
+                    <ThemedText
+                      type="small"
+                      style={record.present ? styles.successText : styles.errorText}>
+                      {record.present ? 'Var' : 'Yok'}
+                    </ThemedText>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+
+            <Pressable
+              style={({ pressed }) => pressed && styles.pressed}
+              onPress={() => setHistoryDancer(null)}>
+              <View style={[styles.primaryButton, styles.primaryButtonFull]}>
+                <ThemedText style={styles.primaryButtonText}>Kapat</ThemedText>
+              </View>
+            </Pressable>
+          </ThemedView>
+        </ThemedView>
+      </Modal>
     </>
   );
 }
@@ -391,7 +457,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorText: {
-    color: '#e05252',
+    color: DANGER_COLOR,
+  },
+  successText: {
+    color: SUCCESS_COLOR,
+  },
+  attendanceList: {
+    maxHeight: 320,
+  },
+  attendanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.three,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(128,128,128,0.2)',
   },
   primaryButton: {
     backgroundColor: PRIMARY_COLOR,

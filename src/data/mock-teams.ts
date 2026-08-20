@@ -256,3 +256,12 @@ export function setAttendance(
     { id: `${teamId}-${dancerId}-${date}`, teamId, dancerId, date, present },
   ];
 }
+
+export function getAttendanceForDancer(
+  records: AttendanceRecord[],
+  dancerId: string,
+): AttendanceRecord[] {
+  return records
+    .filter((record) => record.dancerId === dancerId)
+    .sort((a, b) => b.date.localeCompare(a.date));
+}

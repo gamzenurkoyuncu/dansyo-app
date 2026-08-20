@@ -11,9 +11,16 @@ type DancerCardProps = {
   teamName?: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  onViewAttendance?: () => void;
 };
 
-export function DancerCard({ dancer, teamName, onEdit, onDelete }: DancerCardProps) {
+export function DancerCard({
+  dancer,
+  teamName,
+  onEdit,
+  onDelete,
+  onViewAttendance,
+}: DancerCardProps) {
   const accent = getAccentColor(dancer.id);
   const age = getAge(dancer.birthDate);
   const initials = `${dancer.firstName.charAt(0)}${dancer.lastName.charAt(0)}`.toUpperCase();
@@ -41,8 +48,16 @@ export function DancerCard({ dancer, teamName, onEdit, onDelete }: DancerCardPro
         )}
       </View>
 
-      {(onEdit || onDelete) && (
+      {(onViewAttendance || onEdit || onDelete) && (
         <View style={styles.actions}>
+          {onViewAttendance && (
+            <Pressable
+              hitSlop={8}
+              style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+              onPress={onViewAttendance}>
+              <ThemedText style={styles.iconGlyph}>🕐</ThemedText>
+            </Pressable>
+          )}
           {onEdit && (
             <Pressable
               hitSlop={8}
