@@ -23,6 +23,7 @@ import {
   formatPracticeSlot,
   getAssignedDancerIds,
   getAvailableSeasons,
+  getConflictingPracticeSlots,
   getNextSeasonLabel,
   getInstructorForSeason,
   getPracticeSlotsForTeam,
@@ -594,36 +595,60 @@ export default function TeamsScreen() {
                 })}
               </View>
 
-              {slotDrafts.map((slot) => (
-                <View key={slot.day} style={styles.slotTimeRow}>
-                  <ThemedText type="small" style={styles.slotDayLabel}>
-                    {slot.day}
-                  </ThemedText>
-                  <TextInput
-                    value={slot.startTime}
-                    onChangeText={(value) => updateSlotDraftTime(slot.day, 'startTime', value)}
-                    placeholder="18:00"
-                    placeholderTextColor={theme.textSecondary}
-                    style={[
-                      styles.input,
-                      styles.slotTimeInput,
-                      { color: theme.text, borderColor: theme.backgroundSelected },
-                    ]}
-                  />
-                  <ThemedText themeColor="textSecondary">–</ThemedText>
-                  <TextInput
-                    value={slot.endTime}
-                    onChangeText={(value) => updateSlotDraftTime(slot.day, 'endTime', value)}
-                    placeholder="19:30"
-                    placeholderTextColor={theme.textSecondary}
-                    style={[
-                      styles.input,
-                      styles.slotTimeInput,
-                      { color: theme.text, borderColor: theme.backgroundSelected },
-                    ]}
-                  />
-                </View>
-              ))}
+              {slotDrafts.map((slot) => {
+                const conflicts =
+                  isValidTime(slot.startTime) && isValidTime(slot.endTime)
+                    ? getConflictingPracticeSlots(
+                        practiceSlots,
+                        editingTeamId ?? '',
+                        selectedSeason,
+                        slot.day,
+                        slot.startTime,
+                        slot.endTime,
+                      )
+                    : [];
+                const conflictNames = conflicts
+                  .map((conflict) => teams.find((team) => team.id === conflict.teamId)?.name)
+                  .filter((name): name is string => Boolean(name));
+
+                return (
+                  <View key={slot.day}>
+                    <View style={styles.slotTimeRow}>
+                      <ThemedText type="small" style={styles.slotDayLabel}>
+                        {slot.day}
+                      </ThemedText>
+                      <TextInput
+                        value={slot.startTime}
+                        onChangeText={(value) => updateSlotDraftTime(slot.day, 'startTime', value)}
+                        placeholder="18:00"
+                        placeholderTextColor={theme.textSecondary}
+                        style={[
+                          styles.input,
+                          styles.slotTimeInput,
+                          { color: theme.text, borderColor: theme.backgroundSelected },
+                        ]}
+                      />
+                      <ThemedText themeColor="textSecondary">–</ThemedText>
+                      <TextInput
+                        value={slot.endTime}
+                        onChangeText={(value) => updateSlotDraftTime(slot.day, 'endTime', value)}
+                        placeholder="19:30"
+                        placeholderTextColor={theme.textSecondary}
+                        style={[
+                          styles.input,
+                          styles.slotTimeInput,
+                          { color: theme.text, borderColor: theme.backgroundSelected },
+                        ]}
+                      />
+                    </View>
+                    {conflictNames.length > 0 && (
+                      <ThemedText type="small" style={styles.errorText}>
+                        ⚠️ {conflictNames.join(', ')} ile çakışıyor
+                      </ThemedText>
+                    )}
+                  </View>
+                );
+              })}
               {slotDrafts.some(
                 (slot) =>
                   (slot.startTime.length > 0 && !isValidTime(slot.startTime)) ||
