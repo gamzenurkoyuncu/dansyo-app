@@ -5,6 +5,8 @@ export type Dancer = {
   birthDate: string; // ISO date, e.g. '2015-04-12'
   school: string;
   monthlyFee: number;
+  parentName: string;
+  parentPhone: string;
 };
 
 export const initialDancers: Dancer[] = [
@@ -15,6 +17,8 @@ export const initialDancers: Dancer[] = [
     birthDate: '2016-03-14',
     school: 'Atatürk İlkokulu',
     monthlyFee: 800,
+    parentName: 'Fatma Yıldız',
+    parentPhone: '0532 111 22 33',
   },
   {
     id: '2',
@@ -23,6 +27,8 @@ export const initialDancers: Dancer[] = [
     birthDate: '2013-07-22',
     school: 'Cumhuriyet Ortaokulu',
     monthlyFee: 800,
+    parentName: 'Ahmet Demir',
+    parentPhone: '0533 222 33 44',
   },
   {
     id: '3',
@@ -31,8 +37,19 @@ export const initialDancers: Dancer[] = [
     birthDate: '2010-11-05',
     school: 'Fatih Lisesi',
     monthlyFee: 900,
+    parentName: '',
+    parentPhone: '',
   },
-  { id: '4', firstName: 'Mert', lastName: 'Şahin', birthDate: '2005-01-30', school: '-', monthlyFee: 1000 },
+  {
+    id: '4',
+    firstName: 'Mert',
+    lastName: 'Şahin',
+    birthDate: '2005-01-30',
+    school: '-',
+    monthlyFee: 1000,
+    parentName: '',
+    parentPhone: '',
+  },
 ];
 
 export function getAge(birthDate: string): number | null {

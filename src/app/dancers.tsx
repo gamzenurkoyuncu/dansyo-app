@@ -50,6 +50,8 @@ export default function DancersScreen() {
   const [birthDateInput, setBirthDateInput] = useState('');
   const [schoolInput, setSchoolInput] = useState('');
   const [feeInput, setFeeInput] = useState('');
+  const [parentNameInput, setParentNameInput] = useState('');
+  const [parentPhoneInput, setParentPhoneInput] = useState('');
 
   const [deletingDancer, setDeletingDancer] = useState<Dancer | null>(null);
   const [historyDancer, setHistoryDancer] = useState<Dancer | null>(null);
@@ -71,6 +73,8 @@ export default function DancersScreen() {
     setBirthDateInput('');
     setSchoolInput('');
     setFeeInput('');
+    setParentNameInput('');
+    setParentPhoneInput('');
     setFormVisible(true);
   }
 
@@ -81,6 +85,8 @@ export default function DancersScreen() {
     setBirthDateInput(formatTurkishDate(dancer.birthDate));
     setSchoolInput(dancer.school);
     setFeeInput(String(dancer.monthlyFee));
+    setParentNameInput(dancer.parentName);
+    setParentPhoneInput(dancer.parentPhone);
     setFormVisible(true);
   }
 
@@ -102,6 +108,8 @@ export default function DancersScreen() {
                 birthDate: parsedBirthDate,
                 school: schoolInput.trim(),
                 monthlyFee: parsedFee,
+                parentName: parentNameInput.trim(),
+                parentPhone: parentPhoneInput.trim(),
               }
             : dancer,
         ),
@@ -114,6 +122,8 @@ export default function DancersScreen() {
         birthDate: parsedBirthDate,
         school: schoolInput.trim(),
         monthlyFee: parsedFee,
+        parentName: parentNameInput.trim(),
+        parentPhone: parentPhoneInput.trim(),
       };
       setDancers((prev) => [...prev, newDancer]);
     }
@@ -284,6 +294,33 @@ export default function DancersScreen() {
                   Geçerli bir tutar gir
                 </ThemedText>
               )}
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                👪 Veli Adı (opsiyonel)
+              </ThemedText>
+              <TextInput
+                value={parentNameInput}
+                onChangeText={setParentNameInput}
+                placeholder="örn. Fatma Yıldız"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              />
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                📞 Veli Telefonu (opsiyonel)
+              </ThemedText>
+              <TextInput
+                value={parentPhoneInput}
+                onChangeText={setParentPhoneInput}
+                placeholder="örn. 0532 111 22 33"
+                keyboardType="phone-pad"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              />
             </View>
 
             <Pressable
