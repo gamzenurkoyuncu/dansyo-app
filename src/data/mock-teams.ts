@@ -306,6 +306,16 @@ export type AttendanceSummary = {
   absenceRate: number;
 };
 
+export function getTeamAttendanceSummary(
+  records: AttendanceRecord[],
+  teamId: string,
+): AttendanceSummary {
+  const teamRecords = records.filter((record) => record.teamId === teamId);
+  const total = teamRecords.length;
+  const absent = teamRecords.filter((record) => !record.present).length;
+  return { total, present: total - absent, absent, absenceRate: total > 0 ? absent / total : 0 };
+}
+
 export function getAttendanceSummary(
   records: AttendanceRecord[],
   dancerId: string,

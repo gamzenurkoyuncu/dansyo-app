@@ -11,6 +11,7 @@ type TeamCardProps = {
   instructorName?: string;
   dancerCount: number;
   scheduleSummary?: string;
+  absenceRate?: number;
   onEdit?: () => void;
   onDelete?: () => void;
   onAssignDancers?: () => void;
@@ -30,6 +31,7 @@ export function TeamCard({
   instructorName,
   dancerCount,
   scheduleSummary,
+  absenceRate,
   onEdit,
   onDelete,
   onAssignDancers,
@@ -116,6 +118,12 @@ export function TeamCard({
         {scheduleSummary && (
           <ThemedText type="small" themeColor="textSecondary">
             🗓️ {scheduleSummary}
+          </ThemedText>
+        )}
+
+        {absenceRate !== undefined && (
+          <ThemedText type="small" themeColor="textSecondary">
+            📊 %{Math.round(absenceRate * 100)} devamsızlık
           </ThemedText>
         )}
       </View>

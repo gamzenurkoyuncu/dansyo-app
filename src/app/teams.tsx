@@ -27,6 +27,7 @@ import {
   getInstructorForSeason,
   getPracticeSlotsForTeam,
   getRegionForSeason,
+  getTeamAttendanceSummary,
   getTeamDancerCount,
   getTeamForDancer,
   isValidTime,
@@ -64,6 +65,7 @@ export default function TeamsScreen() {
     setCurrentSeason,
     practiceSlots,
     setPracticeSlots,
+    attendanceRecords,
   } = useAppData();
   const [selectedSeason, setSelectedSeason] = useState(currentSeason);
   const [isSeasonPickerVisible, setSeasonPickerVisible] = useState(false);
@@ -280,22 +282,26 @@ export default function TeamsScreen() {
           </View>
 
           <View style={styles.list}>
-            {teams.map((team) => (
-              <TeamCard
-                key={team.id}
-                team={team}
-                regionName={getRegionForSeason(seasonRegions, team.id, selectedSeason)}
-                instructorName={getInstructorForSeason(seasonInstructors, team.id, selectedSeason)}
-                dancerCount={getTeamDancerCount(assignments, team.id, selectedSeason)}
-                scheduleSummary={getPracticeSlotsForTeam(practiceSlots, team.id, selectedSeason)
-                  .map(formatPracticeSlot)
-                  .join(', ')}
-                onEdit={() => openEditForm(team)}
-                onDelete={() => setDeletingTeam(team)}
-                onAssignDancers={() => setAssigningTeam(team)}
-                onViewHistory={() => setHistoryTeam(team)}
-              />
-            ))}
+            {teams.map((team) => {
+              const attendanceSummary = getTeamAttendanceSummary(attendanceRecords, team.id);
+              return (
+                <TeamCard
+                  key={team.id}
+                  team={team}
+                  regionName={getRegionForSeason(seasonRegions, team.id, selectedSeason)}
+                  instructorName={getInstructorForSeason(seasonInstructors, team.id, selectedSeason)}
+                  dancerCount={getTeamDancerCount(assignments, team.id, selectedSeason)}
+                  scheduleSummary={getPracticeSlotsForTeam(practiceSlots, team.id, selectedSeason)
+                    .map(formatPracticeSlot)
+                    .join(', ')}
+                  absenceRate={attendanceSummary.total > 0 ? attendanceSummary.absenceRate : undefined}
+                  onEdit={() => openEditForm(team)}
+                  onDelete={() => setDeletingTeam(team)}
+                  onAssignDancers={() => setAssigningTeam(team)}
+                  onViewHistory={() => setHistoryTeam(team)}
+                />
+              );
+            })}
           </View>
         </View>
       </ScrollView>
