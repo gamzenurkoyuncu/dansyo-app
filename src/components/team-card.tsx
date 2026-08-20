@@ -10,6 +10,7 @@ type TeamCardProps = {
   regionName?: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  onAssignDancers?: () => void;
 };
 
 const ACCENT_PALETTE = ['#F2994A', '#2F80ED', '#9B51E0', '#14B8A6', '#F2C94C'];
@@ -19,7 +20,7 @@ export function getAccentColor(id: string) {
   return ACCENT_PALETTE[sum % ACCENT_PALETTE.length];
 }
 
-export function TeamCard({ team, regionName, onEdit, onDelete }: TeamCardProps) {
+export function TeamCard({ team, regionName, onEdit, onDelete, onAssignDancers }: TeamCardProps) {
   const accent = getAccentColor(team.id);
 
   return (
@@ -32,8 +33,16 @@ export function TeamCard({ team, regionName, onEdit, onDelete }: TeamCardProps) 
             {team.name}
           </ThemedText>
 
-          {(onEdit || onDelete) && (
+          {(onAssignDancers || onEdit || onDelete) && (
             <View style={styles.actions}>
+              {onAssignDancers && (
+                <Pressable
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.iconButton, pressed && styles.pressed]}
+                  onPress={onAssignDancers}>
+                  <ThemedText style={styles.iconGlyph}>🧑‍🤝‍🧑</ThemedText>
+                </Pressable>
+              )}
               {onEdit && (
                 <Pressable
                   hitSlop={8}

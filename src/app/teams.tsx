@@ -16,14 +16,16 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import {
+  assignDancerToTeam,
   CURRENT_SEASON,
+  getAssignedDancerIds,
   getAvailableSeasons,
   getRegionForSeason,
-  initialSeasonRegions,
-  initialTeams,
-  SeasonRegion,
+  getTeamForDancer,
   Team,
+  unassignDancer,
 } from '@/data/mock-teams';
+import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
 const PRIMARY_COLOR = '#3c87f7';
@@ -37,8 +39,8 @@ export default function TeamsScreen() {
   };
   const theme = useTheme();
 
-  const [teams, setTeams] = useState<Team[]>(initialTeams);
-  const [seasonRegions, setSeasonRegions] = useState<SeasonRegion[]>(initialSeasonRegions);
+  const { teams, setTeams, seasonRegions, setSeasonRegions, dancers, assignments, setAssignments } =
+    useAppData();
   const [selectedSeason, setSelectedSeason] = useState(CURRENT_SEASON);
   const [isSeasonPickerVisible, setSeasonPickerVisible] = useState(false);
 
@@ -49,10 +51,26 @@ export default function TeamsScreen() {
   const [regionInput, setRegionInput] = useState('');
 
   const [deletingTeam, setDeletingTeam] = useState<Team | null>(null);
+  const [assigningTeam, setAssigningTeam] = useState<Team | null>(null);
 
   const availableSeasons = getAvailableSeasons(seasonRegions);
   const canSubmit = nameInput.trim().length > 0 && regionInput.trim().length > 0;
   const formAccent = editingTeamId ? getAccentColor(editingTeamId) : PRIMARY_COLOR;
+  const assigningTeamAccent = assigningTeam ? getAccentColor(assigningTeam.id) : PRIMARY_COLOR;
+  const assignedDancerIds = assigningTeam
+    ? getAssignedDancerIds(assignments, assigningTeam.id, selectedSeason)
+    : [];
+
+  function toggleDancerAssignment(dancerId: string) {
+    if (!assigningTeam) return;
+    if (assignedDancerIds.includes(dancerId)) {
+      setAssignments((prev) => unassignDancer(prev, dancerId, selectedSeason));
+    } else {
+      setAssignments((prev) =>
+        assignDancerToTeam(prev, dancerId, assigningTeam.id, selectedSeason),
+      );
+    }
+  }
 
   function openAddForm() {
     setEditingTeamId(null);
@@ -122,6 +140,7 @@ export default function TeamsScreen() {
     const teamId = deletingTeam.id;
     setTeams((prev) => prev.filter((team) => team.id !== teamId));
     setSeasonRegions((prev) => prev.filter((region) => region.teamId !== teamId));
+    setAssignments((prev) => prev.filter((assignment) => assignment.teamId !== teamId));
     setDeletingTeam(null);
   }
 
@@ -174,6 +193,7 @@ export default function TeamsScreen() {
                 regionName={getRegionForSeason(seasonRegions, team.id, selectedSeason)}
                 onEdit={() => openEditForm(team)}
                 onDelete={() => setDeletingTeam(team)}
+                onAssignDancers={() => setAssigningTeam(team)}
               />
             ))}
           </View>
@@ -337,6 +357,85 @@ export default function TeamsScreen() {
           </ThemedView>
         </ThemedView>
       </Modal>
+
+      <Modal
+        visible={assigningTeam !== null}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setAssigningTeam(null)}>
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView type="backgroundElement" style={styles.modalCard}>
+            <View style={styles.formHeader}>
+              <View style={[styles.formIcon, { backgroundColor: assigningTeamAccent + '26' }]}>
+                <ThemedText style={styles.formIconGlyph}>🧑‍🤝‍🧑</ThemedText>
+              </View>
+              <View style={styles.formHeaderText}>
+                <ThemedText type="subtitle">{assigningTeam?.name}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {selectedSeason} sezonu · {assignedDancerIds.length} dansçı atandı
+                </ThemedText>
+              </View>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+                onPress={() => setAssigningTeam(null)}>
+                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.assignList}>
+              {dancers.length === 0 ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  Henüz dansçı yok. Önce Dansçılar ekranından ekleyebilirsin.
+                </ThemedText>
+              ) : (
+                dancers.map((dancer) => {
+                  const isAssignedHere = assignedDancerIds.includes(dancer.id);
+                  const otherTeam = !isAssignedHere
+                    ? getTeamForDancer(assignments, teams, dancer.id, selectedSeason)
+                    : undefined;
+
+                  return (
+                    <Pressable
+                      key={dancer.id}
+                      style={({ pressed }) => pressed && styles.pressed}
+                      onPress={() => toggleDancerAssignment(dancer.id)}>
+                      <View style={[styles.dancerRow, isAssignedHere && styles.dancerRowSelected]}>
+                        <View style={styles.dancerRowText}>
+                          <ThemedText>
+                            {dancer.firstName} {dancer.lastName}
+                          </ThemedText>
+                          {otherTeam && (
+                            <ThemedText type="small" themeColor="textSecondary">
+                              Şu an: {otherTeam.name}
+                            </ThemedText>
+                          )}
+                        </View>
+                        {isAssignedHere && (
+                          <ThemedText style={styles.seasonOptionSelectedText}>✓</ThemedText>
+                        )}
+                      </View>
+                    </Pressable>
+                  );
+                })
+              )}
+            </ScrollView>
+
+            <Pressable
+              style={({ pressed }) => pressed && styles.pressed}
+              onPress={() => setAssigningTeam(null)}>
+              <View
+                style={[
+                  styles.primaryButton,
+                  styles.primaryButtonFull,
+                  { backgroundColor: assigningTeamAccent },
+                ]}>
+                <ThemedText style={styles.primaryButtonText}>Tamam</ThemedText>
+              </View>
+            </Pressable>
+          </ThemedView>
+        </ThemedView>
+      </Modal>
     </>
   );
 }
@@ -417,6 +516,23 @@ const styles = StyleSheet.create({
   seasonOptionSelectedText: {
     color: PRIMARY_COLOR,
     fontWeight: '700',
+  },
+  assignList: {
+    maxHeight: 320,
+  },
+  dancerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.three,
+    borderRadius: Spacing.two,
+  },
+  dancerRowSelected: {
+    backgroundColor: PRIMARY_COLOR + '14',
+  },
+  dancerRowText: {
+    gap: Spacing.half,
   },
   modalCard: {
     width: '100%',

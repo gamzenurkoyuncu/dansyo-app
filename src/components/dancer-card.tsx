@@ -8,11 +8,12 @@ import { Dancer, getAge } from '@/data/mock-dancers';
 
 type DancerCardProps = {
   dancer: Dancer;
+  teamName?: string;
   onEdit?: () => void;
   onDelete?: () => void;
 };
 
-export function DancerCard({ dancer, onEdit, onDelete }: DancerCardProps) {
+export function DancerCard({ dancer, teamName, onEdit, onDelete }: DancerCardProps) {
   const accent = getAccentColor(dancer.id);
   const age = getAge(dancer.birthDate);
   const initials = `${dancer.firstName.charAt(0)}${dancer.lastName.charAt(0)}`.toUpperCase();
@@ -31,6 +32,13 @@ export function DancerCard({ dancer, onEdit, onDelete }: DancerCardProps) {
           {age !== null ? `${age} yaş` : 'Doğum tarihi geçersiz'}
           {dancer.school ? ` · ${dancer.school}` : ''}
         </ThemedText>
+        {teamName && (
+          <View style={[styles.teamPill, { backgroundColor: accent + '26' }]}>
+            <ThemedText type="small" style={[styles.teamPillText, { color: accent }]}>
+              {teamName}
+            </ThemedText>
+          </View>
+        )}
       </View>
 
       {(onEdit || onDelete) && (
@@ -85,6 +93,16 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   name: {
+    fontWeight: '700',
+  },
+  teamPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.half,
+    borderRadius: Spacing.five,
+    marginTop: Spacing.half,
+  },
+  teamPillText: {
     fontWeight: '700',
   },
   actions: {
