@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -31,8 +31,12 @@ import {
   getTeamDancerCount,
   getTeamForDancer,
   isValidTime,
+  PracticeSlot,
+  SeasonInstructor,
+  SeasonRegion,
   setInstructorForSeason,
   Team,
+  TeamAssignment,
   unassignDancer,
 } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
@@ -40,6 +44,22 @@ import { useTheme } from '@/hooks/use-theme';
 
 const PRIMARY_COLOR = '#3c87f7';
 const DANGER_COLOR = '#e05252';
+
+function UndoTeamBanner({ teamName, onUndo }: { teamName: string | null; onUndo: () => void }) {
+  if (!teamName) return null;
+  return (
+    <View style={styles.undoBar}>
+      <ThemedText type="small" style={styles.undoText}>
+        &quot;{teamName}&quot; silindi
+      </ThemedText>
+      <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={onUndo}>
+        <ThemedText type="small" style={styles.undoAction}>
+          Geri Al
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+}
 
 export default function TeamsScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -85,6 +105,24 @@ export default function TeamsScreen() {
   const [assigningTeam, setAssigningTeam] = useState<Team | null>(null);
   const [historyTeam, setHistoryTeam] = useState<Team | null>(null);
   const [searchInput, setSearchInput] = useState('');
+  const [undoTeam, setUndoTeam] = useState<{
+    team: Team;
+    seasonRegions: SeasonRegion[];
+    seasonInstructors: SeasonInstructor[];
+    assignments: TeamAssignment[];
+    practiceSlots: PracticeSlot[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (!undoTeam) return;
+    const timer = setTimeout(() => setUndoTeam(null), 5000);
+    return () => clearTimeout(timer);
+  }, [undoTeam]);
+
+  let undoTeamName: string | null = null;
+  if (undoTeam !== null) {
+    undoTeamName = undoTeam.team.name;
+  }
 
   const filteredTeams = teams.filter((team) =>
     team.name.toLocaleLowerCase('tr').includes(searchInput.trim().toLocaleLowerCase('tr')),
@@ -237,12 +275,35 @@ export default function TeamsScreen() {
   function handleConfirmDelete() {
     if (!deletingTeam) return;
     const teamId = deletingTeam.id;
+    const removedSeasonRegions = seasonRegions.filter((region) => region.teamId === teamId);
+    const removedSeasonInstructors = seasonInstructors.filter(
+      (instructor) => instructor.teamId === teamId,
+    );
+    const removedAssignments = assignments.filter((assignment) => assignment.teamId === teamId);
+    const removedPracticeSlots = practiceSlots.filter((slot) => slot.teamId === teamId);
     setTeams((prev) => prev.filter((team) => team.id !== teamId));
     setSeasonRegions((prev) => prev.filter((region) => region.teamId !== teamId));
     setSeasonInstructors((prev) => prev.filter((instructor) => instructor.teamId !== teamId));
     setAssignments((prev) => prev.filter((assignment) => assignment.teamId !== teamId));
     setPracticeSlots((prev) => prev.filter((slot) => slot.teamId !== teamId));
+    setUndoTeam({
+      team: deletingTeam,
+      seasonRegions: removedSeasonRegions,
+      seasonInstructors: removedSeasonInstructors,
+      assignments: removedAssignments,
+      practiceSlots: removedPracticeSlots,
+    });
     setDeletingTeam(null);
+  }
+
+  function handleUndoDelete() {
+    if (!undoTeam) return;
+    setTeams((prev) => [...prev, undoTeam.team]);
+    setSeasonRegions((prev) => [...prev, ...undoTeam.seasonRegions]);
+    setSeasonInstructors((prev) => [...prev, ...undoTeam.seasonInstructors]);
+    setAssignments((prev) => [...prev, ...undoTeam.assignments]);
+    setPracticeSlots((prev) => [...prev, ...undoTeam.practiceSlots]);
+    setUndoTeam(null);
   }
 
   const contentPlatformStyle = Platform.select({
@@ -285,6 +346,8 @@ export default function TeamsScreen() {
               </View>
             </Pressable>
           </View>
+
+          <UndoTeamBanner teamName={undoTeamName} onUndo={handleUndoDelete} />
 
           <TextInput
             value={searchInput}
@@ -863,6 +926,22 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: DANGER_COLOR,
+  },
+  undoBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.three,
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  undoText: {
+    flex: 1,
+  },
+  undoAction: {
+    color: PRIMARY_COLOR,
+    fontWeight: '700',
   },
   seasonOptionSelected: {
     backgroundColor: PRIMARY_COLOR + '20',

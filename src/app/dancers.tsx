@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Modal,
@@ -22,6 +22,7 @@ import {
   getAttendanceSummary,
   getConsecutiveAbsences,
   getTeamForDancer,
+  TeamAssignment,
 } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
@@ -29,6 +30,28 @@ import { useTheme } from '@/hooks/use-theme';
 const PRIMARY_COLOR = '#3c87f7';
 const DANGER_COLOR = '#e05252';
 const SUCCESS_COLOR = '#27ae60';
+
+function UndoDancerBanner({
+  dancer,
+  onUndo,
+}: {
+  dancer: Dancer | null;
+  onUndo: () => void;
+}) {
+  if (!dancer) return null;
+  return (
+    <View style={styles.undoBar}>
+      <ThemedText type="small" style={styles.undoText}>
+        &quot;{dancer.firstName} {dancer.lastName}&quot; silindi
+      </ThemedText>
+      <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={onUndo}>
+        <ThemedText type="small" style={styles.undoAction}>
+          Geri Al
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+}
 
 export default function DancersScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -62,6 +85,21 @@ export default function DancersScreen() {
   const [historyDancer, setHistoryDancer] = useState<Dancer | null>(null);
   const [paymentsDancer, setPaymentsDancer] = useState<Dancer | null>(null);
   const [searchInput, setSearchInput] = useState('');
+  const [undoDancer, setUndoDancer] = useState<{
+    dancer: Dancer;
+    assignments: TeamAssignment[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (!undoDancer) return;
+    const timer = setTimeout(() => setUndoDancer(null), 5000);
+    return () => clearTimeout(timer);
+  }, [undoDancer]);
+
+  let bannerDancer: Dancer | null = null;
+  if (undoDancer !== null) {
+    bannerDancer = undoDancer.dancer;
+  }
 
   const filteredDancers = dancers.filter((dancer) =>
     `${dancer.firstName} ${dancer.lastName}`
@@ -146,9 +184,18 @@ export default function DancersScreen() {
   function handleConfirmDelete() {
     if (!deletingDancer) return;
     const dancerId = deletingDancer.id;
+    const removedAssignments = assignments.filter((assignment) => assignment.dancerId === dancerId);
     setDancers((prev) => prev.filter((dancer) => dancer.id !== dancerId));
     setAssignments((prev) => prev.filter((assignment) => assignment.dancerId !== dancerId));
+    setUndoDancer({ dancer: deletingDancer, assignments: removedAssignments });
     setDeletingDancer(null);
+  }
+
+  function handleUndoDelete() {
+    if (!undoDancer) return;
+    setDancers((prev) => [...prev, undoDancer.dancer]);
+    setAssignments((prev) => [...prev, ...undoDancer.assignments]);
+    setUndoDancer(null);
   }
 
   const contentPlatformStyle = Platform.select({
@@ -185,6 +232,8 @@ export default function DancersScreen() {
               </View>
             </Pressable>
           </View>
+
+          <UndoDancerBanner dancer={bannerDancer} onUndo={handleUndoDelete} />
 
           <TextInput
             value={searchInput}
@@ -633,6 +682,22 @@ const styles = StyleSheet.create({
   },
   successText: {
     color: SUCCESS_COLOR,
+  },
+  undoBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.three,
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  undoText: {
+    flex: 1,
+  },
+  undoAction: {
+    color: PRIMARY_COLOR,
+    fontWeight: '700',
   },
   attendanceList: {
     maxHeight: 320,
