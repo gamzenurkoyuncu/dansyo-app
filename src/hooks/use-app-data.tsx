@@ -2,7 +2,9 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 
 import { Dancer, initialDancers } from '@/data/mock-dancers';
 import {
+  CURRENT_SEASON,
   initialSeasonRegions,
+  initialSeasons,
   initialTeamAssignments,
   initialTeams,
   SeasonRegion,
@@ -19,6 +21,10 @@ type AppDataContextValue = {
   setDancers: Dispatch<SetStateAction<Dancer[]>>;
   assignments: TeamAssignment[];
   setAssignments: Dispatch<SetStateAction<TeamAssignment[]>>;
+  seasons: string[];
+  setSeasons: Dispatch<SetStateAction<string[]>>;
+  currentSeason: string;
+  setCurrentSeason: Dispatch<SetStateAction<string>>;
 };
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -28,6 +34,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [seasonRegions, setSeasonRegions] = useState<SeasonRegion[]>(initialSeasonRegions);
   const [dancers, setDancers] = useState<Dancer[]>(initialDancers);
   const [assignments, setAssignments] = useState<TeamAssignment[]>(initialTeamAssignments);
+  const [seasons, setSeasons] = useState<string[]>(initialSeasons);
+  const [currentSeason, setCurrentSeason] = useState<string>(CURRENT_SEASON);
 
   return (
     <AppDataContext
@@ -40,6 +48,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setDancers,
         assignments,
         setAssignments,
+        seasons,
+        setSeasons,
+        currentSeason,
+        setCurrentSeason,
       }}>
       {children}
     </AppDataContext>

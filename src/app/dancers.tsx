@@ -16,7 +16,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { Dancer, formatTurkishDate, parseTurkishDate } from '@/data/mock-dancers';
-import { CURRENT_SEASON, getTeamForDancer } from '@/data/mock-teams';
+import { getTeamForDancer } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -31,7 +31,7 @@ export default function DancersScreen() {
   };
   const theme = useTheme();
 
-  const { dancers, setDancers, teams, assignments, setAssignments } = useAppData();
+  const { dancers, setDancers, teams, assignments, setAssignments, currentSeason } = useAppData();
   const [isFormVisible, setFormVisible] = useState(false);
   const [editingDancerId, setEditingDancerId] = useState<string | null>(null);
   const [firstNameInput, setFirstNameInput] = useState('');
@@ -146,7 +146,7 @@ export default function DancersScreen() {
               <DancerCard
                 key={dancer.id}
                 dancer={dancer}
-                teamName={getTeamForDancer(assignments, teams, dancer.id, CURRENT_SEASON)?.name}
+                teamName={getTeamForDancer(assignments, teams, dancer.id, currentSeason)?.name}
                 onEdit={() => openEditForm(dancer)}
                 onDelete={() => setDeletingDancer(dancer)}
               />

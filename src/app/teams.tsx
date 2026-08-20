@@ -17,9 +17,9 @@ import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import {
   assignDancerToTeam,
-  CURRENT_SEASON,
   getAssignedDancerIds,
   getAvailableSeasons,
+  getNextSeasonLabel,
   getRegionForSeason,
   getTeamDancerCount,
   getTeamForDancer,
@@ -40,10 +40,23 @@ export default function TeamsScreen() {
   };
   const theme = useTheme();
 
-  const { teams, setTeams, seasonRegions, setSeasonRegions, dancers, assignments, setAssignments } =
-    useAppData();
-  const [selectedSeason, setSelectedSeason] = useState(CURRENT_SEASON);
+  const {
+    teams,
+    setTeams,
+    seasonRegions,
+    setSeasonRegions,
+    dancers,
+    assignments,
+    setAssignments,
+    seasons,
+    setSeasons,
+    currentSeason,
+    setCurrentSeason,
+  } = useAppData();
+  const [selectedSeason, setSelectedSeason] = useState(currentSeason);
   const [isSeasonPickerVisible, setSeasonPickerVisible] = useState(false);
+  const [isNewSeasonFormVisible, setNewSeasonFormVisible] = useState(false);
+  const [newSeasonInput, setNewSeasonInput] = useState('');
 
   const [isFormVisible, setFormVisible] = useState(false);
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
@@ -54,7 +67,9 @@ export default function TeamsScreen() {
   const [assigningTeam, setAssigningTeam] = useState<Team | null>(null);
   const [historyTeam, setHistoryTeam] = useState<Team | null>(null);
 
-  const availableSeasons = getAvailableSeasons(seasonRegions);
+  const availableSeasons = getAvailableSeasons(seasons, seasonRegions);
+  const canCreateSeason =
+    newSeasonInput.trim().length > 0 && !availableSeasons.includes(newSeasonInput.trim());
   const canSubmit = nameInput.trim().length > 0 && regionInput.trim().length > 0;
   const formAccent = editingTeamId ? getAccentColor(editingTeamId) : PRIMARY_COLOR;
   const assigningTeamAccent = assigningTeam ? getAccentColor(assigningTeam.id) : PRIMARY_COLOR;
@@ -62,6 +77,25 @@ export default function TeamsScreen() {
   const assignedDancerIds = assigningTeam
     ? getAssignedDancerIds(assignments, assigningTeam.id, selectedSeason)
     : [];
+
+  function openNewSeasonForm() {
+    setNewSeasonInput(getNextSeasonLabel(availableSeasons));
+    setSeasonPickerVisible(false);
+    setNewSeasonFormVisible(true);
+  }
+
+  function handleCancelNewSeason() {
+    setNewSeasonFormVisible(false);
+  }
+
+  function handleCreateSeason() {
+    if (!canCreateSeason) return;
+    const season = newSeasonInput.trim();
+    setSeasons((prev) => [...prev, season]);
+    setCurrentSeason(season);
+    setSelectedSeason(season);
+    setNewSeasonFormVisible(false);
+  }
 
   function toggleDancerAssignment(dancerId: string) {
     if (!assigningTeam) return;
@@ -223,6 +257,7 @@ export default function TeamsScreen() {
                   <ThemedText
                     style={season === selectedSeason ? styles.seasonOptionSelectedText : undefined}>
                     {season}
+                    {season === currentSeason ? ' · aktif' : ''}
                   </ThemedText>
                   {season === selectedSeason && (
                     <ThemedText style={styles.seasonOptionSelectedText}>✓</ThemedText>
@@ -230,8 +265,87 @@ export default function TeamsScreen() {
                 </View>
               </Pressable>
             ))}
+
+            <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={openNewSeasonForm}>
+              <View style={styles.seasonOption}>
+                <ThemedText style={styles.newSeasonText}>+ Yeni Sezon Başlat</ThemedText>
+              </View>
+            </Pressable>
           </ThemedView>
         </Pressable>
+      </Modal>
+
+      <Modal
+        visible={isNewSeasonFormVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={handleCancelNewSeason}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ThemedView type="backgroundElement" style={styles.modalCard}>
+            <View style={styles.formHeader}>
+              <View style={[styles.formIcon, { backgroundColor: PRIMARY_COLOR + '26' }]}>
+                <ThemedText style={styles.formIconGlyph}>🗓️</ThemedText>
+              </View>
+              <View style={styles.formHeaderText}>
+                <ThemedText type="subtitle">Yeni Sezon Başlat</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Aktif sezon olarak ayarlanır
+                </ThemedText>
+              </View>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+                onPress={handleCancelNewSeason}>
+                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+              </Pressable>
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                🗓️ Sezon Adı
+              </ThemedText>
+              <TextInput
+                value={newSeasonInput}
+                onChangeText={setNewSeasonInput}
+                placeholder="örn. 2027-2028"
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              />
+              {newSeasonInput.trim().length > 0 && !canCreateSeason && (
+                <ThemedText type="small" style={styles.errorText}>
+                  Bu sezon zaten var
+                </ThemedText>
+              )}
+            </View>
+
+            <ThemedText type="small" themeColor="textSecondary">
+              Yeni sezonda hiçbir ekibe henüz yöre veya dansçı atanmamış olur — bunları ekip
+              kartlarından tek tek ayarlayabilirsin.
+            </ThemedText>
+
+            <Pressable
+              disabled={!canCreateSeason}
+              style={({ pressed }) => pressed && styles.pressed}
+              onPress={handleCreateSeason}>
+              <View
+                style={[
+                  styles.primaryButton,
+                  styles.primaryButtonFull,
+                  !canCreateSeason && styles.disabledButton,
+                ]}>
+                <ThemedText style={styles.primaryButtonText}>Sezonu Başlat</ThemedText>
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+              onPress={handleCancelNewSeason}>
+              <ThemedText themeColor="textSecondary">İptal</ThemedText>
+            </Pressable>
+          </ThemedView>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
@@ -567,6 +681,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.two,
+  },
+  newSeasonText: {
+    color: PRIMARY_COLOR,
+    fontWeight: '700',
+  },
+  errorText: {
+    color: DANGER_COLOR,
   },
   seasonOptionSelected: {
     backgroundColor: PRIMARY_COLOR + '20',

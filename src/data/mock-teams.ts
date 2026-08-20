@@ -19,6 +19,8 @@ export const CURRENT_SEASON = '2025-2026';
 export const PREVIOUS_SEASON = '2024-2025';
 export const NEXT_SEASON = '2026-2027';
 
+export const initialSeasons: string[] = [PREVIOUS_SEASON, CURRENT_SEASON, NEXT_SEASON];
+
 export const initialTeams: Team[] = [
   { id: '1', name: '7-9 Yaş' },
   { id: '2', name: '10-13 Yaş' },
@@ -53,11 +55,19 @@ export function getRegionForSeason(
   return seasonRegions.find((r) => r.teamId === teamId && r.season === season)?.regionName;
 }
 
-export function getAvailableSeasons(seasonRegions: SeasonRegion[]): string[] {
-  const seasons = new Set(seasonRegions.map((region) => region.season));
-  seasons.add(CURRENT_SEASON);
-  seasons.add(NEXT_SEASON);
-  return Array.from(seasons).sort((a, b) => b.localeCompare(a));
+export function getAvailableSeasons(seasons: string[], seasonRegions: SeasonRegion[]): string[] {
+  const merged = new Set(seasons);
+  seasonRegions.forEach((region) => merged.add(region.season));
+  return Array.from(merged).sort((a, b) => b.localeCompare(a));
+}
+
+export function getNextSeasonLabel(seasons: string[]): string {
+  const [latest] = [...seasons].sort((a, b) => b.localeCompare(a));
+  const match = latest?.match(/^(\d{4})-(\d{4})$/);
+  if (!match) return '';
+
+  const [, startYear, endYear] = match;
+  return `${Number(startYear) + 1}-${Number(endYear) + 1}`;
 }
 
 export function getAssignedDancerIds(
