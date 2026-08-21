@@ -1,17 +1,25 @@
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { getAssignedDancerIds } from '@/data/mock-teams';
+import {
+  CostumeArchiveEntry,
+  getArchiveEntriesFor,
+  getArchiveRegionNames,
+} from '@/data/mock-costume-archive';
+import { getAssignedDancerIds, getAvailableSeasons } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 import { shareText } from '@/utils/share';
 
 const PRIMARY_COLOR = '#3c87f7';
+const DANGER_COLOR = '#e05252';
 
 export default function CostumesScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -21,10 +29,60 @@ export default function CostumesScreen() {
   };
   const theme = useTheme();
 
-  const { teams, dancers, assignments, currentSeason } = useAppData();
+  const { teams, dancers, assignments, currentSeason, seasons, seasonRegions, costumeArchive, setCostumeArchive } =
+    useAppData();
 
+  const [viewMode, setViewMode] = useState<'olcu' | 'arsiv'>('olcu');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(teams[0]?.id ?? null);
   const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
+
+  const availableSeasons = getAvailableSeasons(seasons, seasonRegions);
+  const [archiveSeason, setArchiveSeason] = useState(currentSeason);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [newRegionInput, setNewRegionInput] = useState('');
+  const [viewingEntry, setViewingEntry] = useState<CostumeArchiveEntry | null>(null);
+
+  const archiveRegionNames = getArchiveRegionNames(costumeArchive, seasonRegions);
+  const archiveEntries = selectedRegion
+    ? getArchiveEntriesFor(costumeArchive, selectedRegion, archiveSeason)
+    : [];
+
+  async function handleAddPhoto() {
+    if (!selectedRegion.trim()) return;
+    if (Platform.OS !== 'web') {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.7,
+    });
+    if (result.canceled || result.assets.length === 0) return;
+
+    setCostumeArchive((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}`,
+        regionName: selectedRegion.trim(),
+        season: archiveSeason,
+        imageUri: result.assets[0].uri,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }
+
+  function handleAddRegion() {
+    const name = newRegionInput.trim();
+    if (!name) return;
+    setSelectedRegion(name);
+    setNewRegionInput('');
+  }
+
+  function handleDeletePhoto() {
+    if (!viewingEntry) return;
+    setCostumeArchive((prev) => prev.filter((entry) => entry.id !== viewingEntry.id));
+    setViewingEntry(null);
+  }
 
   const teamDancers = selectedTeam
     ? getAssignedDancerIds(assignments, selectedTeam.id, currentSeason)
@@ -70,6 +128,7 @@ export default function CostumesScreen() {
   });
 
   return (
+    <>
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentInset={insets}
@@ -82,6 +141,29 @@ export default function CostumesScreen() {
           </ThemedText>
         </View>
 
+        <View style={styles.viewModeRow}>
+          <Pressable onPress={() => setViewMode('olcu')}>
+            <View style={[styles.viewModeChip, viewMode === 'olcu' && styles.viewModeChipSelected]}>
+              <ThemedText
+                type="small"
+                style={viewMode === 'olcu' ? styles.viewModeChipSelectedText : undefined}>
+                📏 Ölçüler
+              </ThemedText>
+            </View>
+          </Pressable>
+          <Pressable onPress={() => setViewMode('arsiv')}>
+            <View style={[styles.viewModeChip, viewMode === 'arsiv' && styles.viewModeChipSelected]}>
+              <ThemedText
+                type="small"
+                style={viewMode === 'arsiv' ? styles.viewModeChipSelectedText : undefined}>
+                🗄️ Arşiv
+              </ThemedText>
+            </View>
+          </Pressable>
+        </View>
+
+        {viewMode === 'olcu' && (
+        <>
         <View style={styles.field}>
           <ThemedText type="small" themeColor="textSecondary">
             🎽 Ekip
@@ -174,8 +256,138 @@ export default function CostumesScreen() {
             </>
           )}
         </View>
+        </>
+        )}
+
+        {viewMode === 'arsiv' && (
+          <>
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                🗓️ Sezon
+              </ThemedText>
+              <View style={styles.teamChipRow}>
+                {availableSeasons.map((season) => {
+                  const isSelected = season === archiveSeason;
+                  return (
+                    <Pressable key={season} onPress={() => setArchiveSeason(season)}>
+                      <View style={[styles.teamChip, isSelected && styles.archiveChipSelected]}>
+                        <ThemedText
+                          type="small"
+                          style={isSelected ? styles.archiveChipSelectedText : undefined}>
+                          {season}
+                        </ThemedText>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                📍 Yöre
+              </ThemedText>
+              {archiveRegionNames.length > 0 && (
+                <View style={styles.teamChipRow}>
+                  {archiveRegionNames.map((name) => {
+                    const isSelected = name === selectedRegion;
+                    return (
+                      <Pressable key={name} onPress={() => setSelectedRegion(name)}>
+                        <View style={[styles.teamChip, isSelected && styles.archiveChipSelected]}>
+                          <ThemedText
+                            type="small"
+                            style={isSelected ? styles.archiveChipSelectedText : undefined}>
+                            {name}
+                          </ThemedText>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              )}
+              <View style={styles.newRegionRow}>
+                <TextInput
+                  value={newRegionInput}
+                  onChangeText={setNewRegionInput}
+                  placeholder="Yeni yöre adı (örn. Halay)"
+                  placeholderTextColor={theme.textSecondary}
+                  style={[
+                    styles.input,
+                    styles.newRegionInput,
+                    { color: theme.text, borderColor: theme.backgroundSelected },
+                  ]}
+                />
+                <Pressable
+                  disabled={newRegionInput.trim().length === 0}
+                  style={({ pressed }) => pressed && styles.pressed}
+                  onPress={handleAddRegion}>
+                  <View
+                    style={[
+                      styles.newRegionButton,
+                      newRegionInput.trim().length === 0 && styles.disabledButton,
+                    ]}>
+                    <ThemedText style={styles.newRegionButtonText}>Ekle</ThemedText>
+                  </View>
+                </Pressable>
+              </View>
+            </View>
+
+            {!selectedRegion ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                Önce bir yöre seç veya yeni bir yöre adı ekle.
+              </ThemedText>
+            ) : (
+              <View style={styles.list}>
+                <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={handleAddPhoto}>
+                  <View style={styles.shareButton}>
+                    <ThemedText style={styles.shareButtonText}>📷 Fotoğraf Ekle</ThemedText>
+                  </View>
+                </Pressable>
+
+                {archiveEntries.length === 0 ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {selectedRegion} · {archiveSeason} için henüz fotoğraf yok.
+                  </ThemedText>
+                ) : (
+                  <View style={styles.photoGrid}>
+                    {archiveEntries.map((entry) => (
+                      <Pressable key={entry.id} onPress={() => setViewingEntry(entry)}>
+                        <Image source={{ uri: entry.imageUri }} style={styles.photoThumb} />
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+          </>
+        )}
       </View>
     </ScrollView>
+
+    <Modal
+      visible={viewingEntry !== null}
+      animationType="fade"
+      transparent
+      onRequestClose={() => setViewingEntry(null)}>
+      <View style={styles.viewerOverlay}>
+        {viewingEntry && (
+          <Image source={{ uri: viewingEntry.imageUri }} style={styles.viewerImage} contentFit="contain" />
+        )}
+        <View style={styles.viewerActions}>
+          <Pressable
+            style={({ pressed }) => [styles.viewerButton, pressed && styles.pressed]}
+            onPress={() => setViewingEntry(null)}>
+            <ThemedText style={styles.viewerButtonText}>Kapat</ThemedText>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.viewerButton, styles.viewerDeleteButton, pressed && styles.pressed]}
+            onPress={handleDeletePhoto}>
+            <ThemedText style={styles.viewerButtonText}>🗑️ Sil</ThemedText>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+    </>
   );
 }
 
@@ -198,8 +410,99 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
     paddingTop: Spacing.six,
   },
+  viewModeRow: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+  viewModeChip: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  viewModeChipSelected: {
+    backgroundColor: PRIMARY_COLOR,
+  },
+  viewModeChipSelectedText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  archiveChipSelected: {
+    backgroundColor: PRIMARY_COLOR,
+  },
+  archiveChipSelectedText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
   field: {
     gap: Spacing.one,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    fontSize: 16,
+  },
+  newRegionRow: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+    alignItems: 'center',
+  },
+  newRegionInput: {
+    flex: 1,
+  },
+  newRegionButton: {
+    backgroundColor: PRIMARY_COLOR,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.two,
+  },
+  newRegionButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  disabledButton: {
+    opacity: 0.4,
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  photoThumb: {
+    width: 104,
+    height: 104,
+    borderRadius: Spacing.two,
+    backgroundColor: 'rgba(128,128,128,0.14)',
+  },
+  viewerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.four,
+  },
+  viewerImage: {
+    width: '100%',
+    height: '75%',
+  },
+  viewerActions: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+  },
+  viewerButton: {
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
+    borderRadius: Spacing.five,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+  },
+  viewerDeleteButton: {
+    backgroundColor: DANGER_COLOR,
+  },
+  viewerButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
   },
   teamChipRow: {
     flexDirection: 'row',
