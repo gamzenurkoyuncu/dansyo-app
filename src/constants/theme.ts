@@ -9,22 +9,43 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: '#15161A',
+    background: '#F7F7F9',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: '#ECEDF1',
+    textSecondary: '#6B707A',
+    border: 'rgba(15,15,20,0.07)',
+    primary: '#3c87f7',
+    success: '#27ae60',
+    danger: '#e05252',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: '#F5F5F7',
+    background: '#0B0C0E',
+    backgroundElement: '#1C1D21',
+    backgroundSelected: '#26282D',
+    textSecondary: '#9CA0AA',
+    border: 'rgba(255,255,255,0.08)',
+    primary: '#3c87f7',
+    success: '#27ae60',
+    danger: '#e05252',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+// Subtle elevation for card-like surfaces (ThemedView type="backgroundElement").
+// Shadows read clearly on light backgrounds; on dark backgrounds a shadow is
+// nearly invisible, so cards rely on the `border` token there instead.
+export const CardShadow = Platform.select({
+  android: { elevation: 2 },
+  default: {
+    shadowColor: '#0F0F14',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+  },
+});
 
 export const Fonts = Platform.select({
   ios: {

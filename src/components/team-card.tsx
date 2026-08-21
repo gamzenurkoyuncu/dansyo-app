@@ -138,11 +138,12 @@ export function TeamCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
-    overflow: 'hidden',
     borderRadius: Spacing.three,
   },
   accentBar: {
     width: 5,
+    borderTopLeftRadius: Spacing.three,
+    borderBottomLeftRadius: Spacing.three,
   },
   body: {
     flex: 1,
