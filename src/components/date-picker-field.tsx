@@ -22,20 +22,44 @@ function toISO(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+function fromISO(value: string | null): Date {
+  return value ? new Date(`${value}T00:00:00`) : new Date();
+}
+
 export function DatePickerField({ value, onChange, placeholder }: DatePickerFieldProps) {
   const theme = useTheme();
   const [isVisible, setVisible] = useState(false);
-  const dateValue = value ? new Date(`${value}T00:00:00`) : new Date();
+  // While the iOS sheet is open, the picker is uncontrolled from the parent's
+  // perspective — it only reads `pendingDate` (updated locally on every
+  // scroll tick) and commits to the parent once, on "Tamam". Feeding the
+  // parent's `value` straight back into the native picker on every tick
+  // fights the user's in-progress gesture (a known datetimepicker/iOS issue).
+  const [pendingDate, setPendingDate] = useState<Date>(() => fromISO(value));
 
-  function handleChange(event: DateTimePickerEvent, selected?: Date) {
-    if (Platform.OS === 'android') setVisible(false);
+  function openPicker() {
+    setPendingDate(fromISO(value));
+    setVisible(true);
+  }
+
+  function handleAndroidChange(event: DateTimePickerEvent, selected?: Date) {
+    setVisible(false);
     if (event.type === 'dismissed' || !selected) return;
     onChange(toISO(selected));
   }
 
+  function handleIOSChange(event: DateTimePickerEvent, selected?: Date) {
+    if (event.type === 'dismissed' || !selected) return;
+    setPendingDate(selected);
+  }
+
+  function confirmIOSDate() {
+    onChange(toISO(pendingDate));
+    setVisible(false);
+  }
+
   return (
     <>
-      <Pressable onPress={() => setVisible(true)}>
+      <Pressable onPress={openPicker}>
         <View style={[styles.field, { borderColor: theme.backgroundSelected }]}>
           <ThemedText style={!value ? { color: theme.textSecondary } : undefined}>
             {value ? formatTurkishDate(value) : (placeholder ?? '📅 Tarih seç')}
@@ -44,27 +68,31 @@ export function DatePickerField({ value, onChange, placeholder }: DatePickerFiel
       </Pressable>
 
       {isVisible && Platform.OS === 'android' && (
-        <DateTimePicker value={dateValue} mode="date" display="calendar" onChange={handleChange} />
+        <DateTimePicker
+          value={fromISO(value)}
+          mode="date"
+          display="calendar"
+          onChange={handleAndroidChange}
+        />
       )}
 
       {Platform.OS === 'ios' && (
-        <Modal
-          visible={isVisible}
-          animationType="fade"
-          transparent
-          onRequestClose={() => setVisible(false)}>
-          <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
-            <Pressable>
-              <View style={[styles.sheet, { backgroundColor: theme.backgroundElement }]}>
-                <DateTimePicker value={dateValue} mode="date" display="inline" onChange={handleChange} />
-                <Pressable onPress={() => setVisible(false)}>
-                  <View style={styles.doneButton}>
-                    <ThemedText style={styles.doneButtonText}>Tamam</ThemedText>
-                  </View>
-                </Pressable>
-              </View>
-            </Pressable>
-          </Pressable>
+        <Modal visible={isVisible} animationType="fade" transparent onRequestClose={confirmIOSDate}>
+          <View style={styles.overlay}>
+            <View style={[styles.sheet, { backgroundColor: theme.backgroundElement }]}>
+              <DateTimePicker
+                value={pendingDate}
+                mode="date"
+                display="spinner"
+                onChange={handleIOSChange}
+              />
+              <Pressable onPress={confirmIOSDate}>
+                <View style={styles.doneButton}>
+                  <ThemedText style={styles.doneButtonText}>Tamam</ThemedText>
+                </View>
+              </Pressable>
+            </View>
+          </View>
         </Modal>
       )}
     </>
