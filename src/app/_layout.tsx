@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
@@ -10,9 +11,11 @@ SplashScreen.preventAutoHideAsync();
 
 export default function TabLayout() {
   return (
-    <AppDataProvider>
-      <ThemedNavigation />
-    </AppDataProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppDataProvider>
+        <ThemedNavigation />
+      </AppDataProvider>
+    </GestureHandlerRootView>
   );
 }
 

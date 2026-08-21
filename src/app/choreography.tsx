@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DraggablePawn } from '@/components/draggable-pawn';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import {
+  ChoreographyPawnPosition,
   ChoreographyPlan,
   ChoreographyPlanRow,
   getPlansForTeam,
@@ -105,6 +107,49 @@ export default function ChoreographyScreen() {
     }
   }
 
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [pawnPositions, setPawnPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [layoutVersion, setLayoutVersion] = useState(0);
+
+  function computeAutoLayout(): Record<string, { x: number; y: number }> {
+    if (dancersWithHeight.length === 0) return {};
+    // Use the venue-derived row capacity when available; otherwise fall back
+    // to a roughly square grid so pawns never stack on top of each other.
+    const layoutPerRow = perRow ?? Math.max(1, Math.ceil(Math.sqrt(dancersWithHeight.length * 1.5)));
+    const layoutRows: { dancer: Dancer; height: number }[][] = [];
+    for (let i = 0; i < dancersWithHeight.length; i += layoutPerRow) {
+      layoutRows.push(dancersWithHeight.slice(i, i + layoutPerRow));
+    }
+
+    const layout: Record<string, { x: number; y: number }> = {};
+    const rowCount = layoutRows.length || 1;
+    layoutRows.forEach((row, rowIndex) => {
+      // Front row (shortest, index 0) sits near the bottom of the stage view
+      // (closest to the audience), back row near the top.
+      const y = 1 - (rowIndex + 0.5) / rowCount;
+      row.forEach((entry, colIndex) => {
+        const x = (colIndex + 0.5) / row.length;
+        layout[entry.dancer.id] = { x, y };
+      });
+    });
+    return layout;
+  }
+
+  const autoLayout = computeAutoLayout();
+
+  function getPawnPosition(dancerId: string): { x: number; y: number } {
+    return pawnPositions[dancerId] ?? autoLayout[dancerId] ?? { x: 0.5, y: 0.5 };
+  }
+
+  function handlePawnDragEnd(dancerId: string, x: number, y: number) {
+    setPawnPositions((prev) => ({ ...prev, [dancerId]: { x, y } }));
+  }
+
+  function handleAutoArrange() {
+    setPawnPositions({});
+    setLayoutVersion((v) => v + 1);
+  }
+
   const teamPlans = selectedTeam ? getPlansForTeam(choreographyPlans, selectedTeam.id) : [];
 
   function handleSavePlan() {
@@ -115,6 +160,16 @@ export default function ChoreographyScreen() {
         .map((entry) => `${entry.dancer.firstName} ${entry.dancer.lastName} (${entry.height}cm)`)
         .join(', '),
     }));
+    const planPositions: ChoreographyPawnPosition[] = teamDancers.map((dancer) => {
+      const pos = getPawnPosition(dancer.id);
+      return {
+        dancerId: dancer.id,
+        label: `${dancer.firstName.charAt(0)}${dancer.lastName.charAt(0)}`.toUpperCase(),
+        color: getAccentColor(dancer.id),
+        x: pos.x,
+        y: pos.y,
+      };
+    });
     const newPlan: ChoreographyPlan = {
       id: Date.now().toString(),
       teamId: selectedTeam.id,
@@ -131,6 +186,7 @@ export default function ChoreographyScreen() {
       avgHeight,
       fitsVenue,
       rows: planRows,
+      positions: planPositions,
       createdAt: new Date().toISOString(),
     };
     setChoreographyPlans((prev) => [...prev, newPlan]);
@@ -340,21 +396,55 @@ export default function ChoreographyScreen() {
                 </ThemedView>
               )}
 
-              {rows.length > 0 && (
-                <View style={styles.field}>
-                  <ThemedText type="smallBold">📐 Boya Göre Önerilen Sıra Düzeni (önden arkaya)</ThemedText>
-                  {rows.map((row, index) => (
-                    <ThemedView key={index} type="backgroundElement" style={styles.rowCard}>
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {index + 1}. Sıra{index === 0 ? ' (ön)' : index === rows.length - 1 ? ' (arka)' : ''}
-                      </ThemedText>
-                      <ThemedText style={styles.rowNames}>
-                        {row.map((entry) => `${entry.dancer.firstName} ${entry.dancer.lastName} (${entry.height}cm)`).join(', ')}
-                      </ThemedText>
-                    </ThemedView>
-                  ))}
+              <View style={styles.field}>
+                <View style={styles.stageHeaderRow}>
+                  <ThemedText type="smallBold">💃 Sahne Düzeni</ThemedText>
+                  <Pressable
+                    style={({ pressed }) => pressed && styles.pressed}
+                    onPress={handleAutoArrange}>
+                    <ThemedText type="small" style={styles.autoArrangeLink}>
+                      🔄 Boya Göre Otomatik Diz
+                    </ThemedText>
+                  </Pressable>
                 </View>
-              )}
+                <ThemedText type="small" themeColor="textSecondary">
+                  Piyonları sürükleyerek dansçıları sahnede istediğin yere yerleştir.
+                </ThemedText>
+                <View
+                  style={[
+                    styles.stage,
+                    { aspectRatio: selectedVenue ? selectedVenue.width / selectedVenue.depth : 1.5 },
+                  ]}
+                  onLayout={(event) => {
+                    const { width, height } = event.nativeEvent.layout;
+                    setStageSize({ width, height });
+                  }}>
+                  {stageSize.width > 0 &&
+                    teamDancers.map((dancer) => {
+                      const position = getPawnPosition(dancer.id);
+                      const initials =
+                        `${dancer.firstName.charAt(0)}${dancer.lastName.charAt(0)}`.toUpperCase();
+                      return (
+                        <DraggablePawn
+                          key={`${dancer.id}-${layoutVersion}`}
+                          label={initials}
+                          color={getAccentColor(dancer.id)}
+                          initialX={position.x}
+                          initialY={position.y}
+                          stageWidth={stageSize.width}
+                          stageHeight={stageSize.height}
+                          onPositionChange={(x, y) => handlePawnDragEnd(dancer.id, x, y)}
+                        />
+                      );
+                    })}
+                  <ThemedText type="small" style={styles.stageBackLabel}>
+                    Sahne Arkası
+                  </ThemedText>
+                  <ThemedText type="small" style={styles.stageFrontLabel}>
+                    Sahne Önü · Seyirci
+                  </ThemedText>
+                </View>
+              </View>
 
               <View style={styles.field}>
                 <ThemedText type="small" themeColor="textSecondary">
@@ -406,11 +496,24 @@ export default function ChoreographyScreen() {
                     </ThemedText>
                   )}
                   {plan.note.length > 0 && <ThemedText style={styles.planNote}>{plan.note}</ThemedText>}
-                  {plan.rows.map((row) => (
-                    <ThemedText key={row.rowNumber} type="small" themeColor="textSecondary">
-                      {row.rowNumber}. Sıra: {row.summary}
-                    </ThemedText>
-                  ))}
+                  {plan.positions.length > 0 && (
+                    <View style={styles.miniStage}>
+                      {plan.positions.map((position) => (
+                        <View
+                          key={position.dancerId}
+                          style={[
+                            styles.miniPawn,
+                            {
+                              backgroundColor: position.color,
+                              left: `${position.x * 100}%`,
+                              top: `${position.y * 100}%`,
+                            },
+                          ]}>
+                          <ThemedText style={styles.miniPawnLabel}>{position.label}</ThemedText>
+                        </View>
+                      ))}
+                    </View>
+                  )}
                 </ThemedView>
               ))}
             </View>
@@ -586,13 +689,63 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
     borderRadius: Spacing.three,
   },
-  rowCard: {
-    gap: Spacing.half,
-    padding: Spacing.three,
-    borderRadius: Spacing.three,
+  stageHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  rowNames: {
-    flexShrink: 1,
+  autoArrangeLink: {
+    color: PRIMARY_COLOR,
+    fontWeight: '700',
+  },
+  stage: {
+    width: '100%',
+    backgroundColor: '#1B2A20',
+    borderRadius: Spacing.three,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  stageBackLabel: {
+    position: 'absolute',
+    top: Spacing.one,
+    alignSelf: 'center',
+    color: 'rgba(255,255,255,0.4)',
+  },
+  stageFrontLabel: {
+    position: 'absolute',
+    bottom: Spacing.one,
+    alignSelf: 'center',
+    color: 'rgba(255,255,255,0.4)',
+  },
+  miniStage: {
+    width: '100%',
+    aspectRatio: 1.5,
+    backgroundColor: '#1B2A20',
+    borderRadius: Spacing.two,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    overflow: 'hidden',
+    position: 'relative',
+    marginTop: Spacing.half,
+  },
+  miniPawn: {
+    position: 'absolute',
+    width: 22,
+    height: 22,
+    marginLeft: -11,
+    marginTop: -11,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+  },
+  miniPawnLabel: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 8,
   },
   planCard: {
     gap: Spacing.half,

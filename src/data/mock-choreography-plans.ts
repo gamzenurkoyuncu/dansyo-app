@@ -3,6 +3,14 @@ export type ChoreographyPlanRow = {
   summary: string; // e.g. "Ela Yıldız (138cm), Kerem Demir (152cm)"
 };
 
+export type ChoreographyPawnPosition = {
+  dancerId: string;
+  label: string; // initials shown on the pawn
+  color: string;
+  x: number; // 0..1, relative to stage width
+  y: number; // 0..1, relative to stage height
+};
+
 export type ChoreographyPlan = {
   id: string;
   teamId: string;
@@ -17,6 +25,7 @@ export type ChoreographyPlan = {
   avgHeight: number | null;
   fitsVenue: boolean | null;
   rows: ChoreographyPlanRow[];
+  positions: ChoreographyPawnPosition[];
   createdAt: string; // ISO datetime
 };
 
