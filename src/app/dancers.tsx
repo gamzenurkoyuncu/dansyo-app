@@ -12,11 +12,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DancerCard } from '@/components/dancer-card';
+import { DatePickerField } from '@/components/date-picker-field';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { Dancer, formatTurkishDate, getAge, parseTurkishDate } from '@/data/mock-dancers';
+import { Dancer, formatTurkishDate, getAge } from '@/data/mock-dancers';
 import { formatTurkishMonth, getPaymentsForDancer } from '@/data/mock-payments';
 import {
   getAttendanceForDancer,
@@ -83,7 +84,7 @@ export default function DancersScreen() {
   const [editingDancerId, setEditingDancerId] = useState<string | null>(null);
   const [firstNameInput, setFirstNameInput] = useState('');
   const [lastNameInput, setLastNameInput] = useState('');
-  const [birthDateInput, setBirthDateInput] = useState('');
+  const [birthDateISO, setBirthDateISO] = useState<string | null>(null);
   const [schoolInput, setSchoolInput] = useState('');
   const [feeInput, setFeeInput] = useState('');
   const [parentNameInput, setParentNameInput] = useState('');
@@ -149,20 +150,19 @@ export default function DancersScreen() {
     }
   }
 
-  const parsedBirthDate = parseTurkishDate(birthDateInput);
   const parsedFee = Number(feeInput);
   const isFeeValid = feeInput.trim().length > 0 && Number.isFinite(parsedFee) && parsedFee >= 0;
   const canSubmit =
     firstNameInput.trim().length > 0 &&
     lastNameInput.trim().length > 0 &&
-    parsedBirthDate !== null &&
+    birthDateISO !== null &&
     isFeeValid;
 
   function openAddForm() {
     setEditingDancerId(null);
     setFirstNameInput('');
     setLastNameInput('');
-    setBirthDateInput('');
+    setBirthDateISO(null);
     setSchoolInput('');
     setFeeInput('');
     setParentNameInput('');
@@ -177,7 +177,7 @@ export default function DancersScreen() {
     setEditingDancerId(dancer.id);
     setFirstNameInput(dancer.firstName);
     setLastNameInput(dancer.lastName);
-    setBirthDateInput(formatTurkishDate(dancer.birthDate));
+    setBirthDateISO(dancer.birthDate);
     setSchoolInput(dancer.school);
     setFeeInput(String(dancer.monthlyFee));
     setParentNameInput(dancer.parentName);
@@ -193,7 +193,7 @@ export default function DancersScreen() {
   }
 
   function handleSaveDancer() {
-    if (!canSubmit || !parsedBirthDate) return;
+    if (!canSubmit || !birthDateISO) return;
 
     if (editingDancerId) {
       setDancers((prev) =>
@@ -203,7 +203,7 @@ export default function DancersScreen() {
                 ...dancer,
                 firstName: firstNameInput.trim(),
                 lastName: lastNameInput.trim(),
-                birthDate: parsedBirthDate,
+                birthDate: birthDateISO,
                 school: schoolInput.trim(),
                 monthlyFee: parsedFee,
                 parentName: parentNameInput.trim(),
@@ -220,7 +220,7 @@ export default function DancersScreen() {
         id: Date.now().toString(),
         firstName: firstNameInput.trim(),
         lastName: lastNameInput.trim(),
-        birthDate: parsedBirthDate,
+        birthDate: birthDateISO,
         school: schoolInput.trim(),
         monthlyFee: parsedFee,
         parentName: parentNameInput.trim(),
@@ -485,21 +485,13 @@ export default function DancersScreen() {
 
             <View style={styles.field}>
               <ThemedText type="small" themeColor="textSecondary">
-                🎂 Doğum Tarihi (gg.aa.yyyy)
+                🎂 Doğum Tarihi
               </ThemedText>
-              <TextInput
-                value={birthDateInput}
-                onChangeText={setBirthDateInput}
-                placeholder="örn. 14.03.2016"
-                keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
-                placeholderTextColor={theme.textSecondary}
-                style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+              <DatePickerField
+                value={birthDateISO}
+                onChange={setBirthDateISO}
+                placeholder="Doğum tarihi seç"
               />
-              {birthDateInput.length > 0 && !parsedBirthDate && (
-                <ThemedText type="small" style={styles.errorText}>
-                  Geçerli bir tarih gir (gg.aa.yyyy)
-                </ThemedText>
-              )}
             </View>
 
             <View style={styles.field}>

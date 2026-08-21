@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DatePickerField } from '@/components/date-picker-field';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { addDaysToISO, formatTurkishDate, getTodayISO, parseTurkishDate } from '@/data/mock-dancers';
+import { addDaysToISO, formatTurkishDate, getTodayISO } from '@/data/mock-dancers';
 import {
   getAssignedDancerIds,
   getAttendanceDatesForTeam,
@@ -38,11 +39,10 @@ export default function AttendanceScreen() {
   const { teams, dancers, assignments, currentSeason, attendanceRecords, setAttendanceRecords } =
     useAppData();
 
-  const [dateInput, setDateInput] = useState(formatTurkishDate(getTodayISO()));
+  const [selectedDate, setSelectedDate] = useState(getTodayISO());
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(teams[0]?.id ?? null);
   const [expandedDancerId, setExpandedDancerId] = useState<string | null>(null);
 
-  const parsedDate = parseTurkishDate(dateInput);
   const selectedTeam = teams.find((team) => team.id === selectedTeamId) ?? null;
 
   const teamDancers = selectedTeam
@@ -52,13 +52,12 @@ export default function AttendanceScreen() {
     : [];
 
   const unsortedRows = teamDancers.map((dancer) => {
-    const record =
-      selectedTeam && parsedDate
-        ? attendanceRecords.find(
-            (item) =>
-              item.teamId === selectedTeam.id && item.dancerId === dancer.id && item.date === parsedDate,
-          )
-        : undefined;
+    const record = selectedTeam
+      ? attendanceRecords.find(
+          (item) =>
+            item.teamId === selectedTeam.id && item.dancerId === dancer.id && item.date === selectedDate,
+        )
+      : undefined;
     return { dancer, present: record?.present, note: record?.note };
   });
   const rows = [
@@ -71,17 +70,17 @@ export default function AttendanceScreen() {
   const pastDates = selectedTeam ? getAttendanceDatesForTeam(attendanceRecords, selectedTeam.id) : [];
 
   function handleMark(dancerId: string, present: boolean, note?: string) {
-    if (!selectedTeam || !parsedDate) return;
+    if (!selectedTeam) return;
     setAttendanceRecords((prev) =>
-      setAttendance(prev, selectedTeam.id, dancerId, parsedDate, present, note),
+      setAttendance(prev, selectedTeam.id, dancerId, selectedDate, present, note),
     );
   }
 
   function handleMarkAllPresent() {
-    if (!selectedTeam || !parsedDate) return;
+    if (!selectedTeam) return;
     setAttendanceRecords((prev) =>
       teamDancers.reduce(
-        (acc, dancer) => setAttendance(acc, selectedTeam.id, dancer.id, parsedDate, true),
+        (acc, dancer) => setAttendance(acc, selectedTeam.id, dancer.id, selectedDate, true),
         prev,
       ),
     );
@@ -115,24 +114,15 @@ export default function AttendanceScreen() {
 
         <View style={styles.field}>
           <ThemedText type="small" themeColor="textSecondary">
-            📅 Tarih (gg.aa.yyyy)
+            📅 Tarih
           </ThemedText>
-          <TextInput
-            value={dateInput}
-            onChangeText={setDateInput}
-            placeholder="örn. 20.08.2026"
-            keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
-            placeholderTextColor={theme.textSecondary}
-            style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
-          />
+          <DatePickerField value={selectedDate} onChange={setSelectedDate} />
           <View style={styles.quickDateRow}>
             {QUICK_DATE_OFFSETS.map(({ label, offset }) => {
               const optionDate = addDaysToISO(getTodayISO(), offset);
-              const isSelected = parsedDate === optionDate;
+              const isSelected = selectedDate === optionDate;
               return (
-                <Pressable
-                  key={label}
-                  onPress={() => setDateInput(formatTurkishDate(optionDate))}>
+                <Pressable key={label} onPress={() => setSelectedDate(optionDate)}>
                   <View style={[styles.quickDateChip, isSelected && styles.quickDateChipSelected]}>
                     <ThemedText
                       type="small"
@@ -144,11 +134,6 @@ export default function AttendanceScreen() {
               );
             })}
           </View>
-          {dateInput.trim().length > 0 && !parsedDate && (
-            <ThemedText type="small" style={styles.errorText}>
-              Geçerli bir tarih gir (gg.aa.yyyy)
-            </ThemedText>
-          )}
           {pastDates.length > 0 && (
             <View style={styles.pastDatesBlock}>
               <ThemedText type="small" themeColor="textSecondary">
@@ -156,9 +141,9 @@ export default function AttendanceScreen() {
               </ThemedText>
               <View style={styles.quickDateRow}>
                 {pastDates.slice(0, 8).map((isoDate) => {
-                  const isSelected = parsedDate === isoDate;
+                  const isSelected = selectedDate === isoDate;
                   return (
-                    <Pressable key={isoDate} onPress={() => setDateInput(formatTurkishDate(isoDate))}>
+                    <Pressable key={isoDate} onPress={() => setSelectedDate(isoDate)}>
                       <View style={[styles.quickDateChip, isSelected && styles.quickDateChipSelected]}>
                         <ThemedText
                           type="small"
@@ -205,7 +190,7 @@ export default function AttendanceScreen() {
           </View>
         </View>
 
-        {selectedTeam && parsedDate && rows.length > 0 && (
+        {selectedTeam && rows.length > 0 && (
           <View style={styles.summaryRow}>
             <ThemedText type="small" themeColor="textSecondary" style={styles.summaryText}>
               ✅ {presentCount} var · ❌ {absentCount} yok · {rows.length - presentCount - absentCount}{' '}
@@ -225,10 +210,6 @@ export default function AttendanceScreen() {
           {!selectedTeam ? (
             <ThemedText type="small" themeColor="textSecondary">
               Önce bir ekip seç.
-            </ThemedText>
-          ) : !parsedDate ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              Yoklama almak için geçerli bir tarih gir.
             </ThemedText>
           ) : rows.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">

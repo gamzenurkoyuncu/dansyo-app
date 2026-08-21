@@ -1,18 +1,13 @@
 import { useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { DatePickerField } from '@/components/date-picker-field';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import {
-  formatTurkishMonth,
-  getCurrentMonthISO,
-  getPaymentStatus,
-  parseTurkishMonth,
-  setPayment,
-} from '@/data/mock-payments';
+import { formatTurkishMonth, getCurrentMonthISO, getPaymentStatus, setPayment } from '@/data/mock-payments';
 import { getTeamAttendanceSummary, getTeamDancerCount } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
@@ -41,14 +36,12 @@ export default function PaymentsScreen() {
     attendanceRecords,
   } = useAppData();
 
-  const [monthInput, setMonthInput] = useState(formatTurkishMonth(getCurrentMonthISO()));
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthISO());
   const [isReportVisible, setReportVisible] = useState(false);
-
-  const parsedMonth = parseTurkishMonth(monthInput);
 
   const rows = dancers.map((dancer) => ({
     dancer,
-    paid: parsedMonth ? getPaymentStatus(paymentRecords, dancer.id, parsedMonth) : undefined,
+    paid: getPaymentStatus(paymentRecords, dancer.id, selectedMonth),
   }));
   const paidCount = rows.filter((row) => row.paid === true).length;
   const unpaidCount = rows.filter((row) => row.paid === false).length;
@@ -60,8 +53,7 @@ export default function PaymentsScreen() {
   const collectionRate = rows.length > 0 ? paidCount / rows.length : null;
 
   function handleMark(dancerId: string, paid: boolean) {
-    if (!parsedMonth) return;
-    setPaymentRecords((prev) => setPayment(prev, dancerId, parsedMonth, paid));
+    setPaymentRecords((prev) => setPayment(prev, dancerId, selectedMonth, paid));
   }
 
   function handleShareReport() {
@@ -72,9 +64,7 @@ export default function PaymentsScreen() {
       overallAbsenceRate !== null
         ? `📊 Genel devamsızlık oranı: %${Math.round(overallAbsenceRate * 100)}`
         : '📊 Genel devamsızlık oranı: veri yok',
-      parsedMonth
-        ? `💰 ${formatTurkishMonth(parsedMonth)} tahsilat oranı: %${Math.round((collectionRate ?? 0) * 100)} (${paidCount}/${rows.length})`
-        : '💰 Tahsilat oranı: geçerli bir ay seçilmedi',
+      `💰 ${formatTurkishMonth(selectedMonth)} tahsilat oranı: %${Math.round((collectionRate ?? 0) * 100)} (${paidCount}/${rows.length})`,
       '',
       ...teams.map((team) => {
         const summary = getTeamAttendanceSummary(attendanceRecords, team.id);
@@ -125,36 +115,21 @@ export default function PaymentsScreen() {
 
         <View style={styles.field}>
           <ThemedText type="small" themeColor="textSecondary">
-            📅 Ay (aa.yyyy)
+            📅 Ay
           </ThemedText>
-          <TextInput
-            value={monthInput}
-            onChangeText={setMonthInput}
-            placeholder="örn. 08.2026"
-            keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'default'}
-            placeholderTextColor={theme.textSecondary}
-            style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+          <DatePickerField
+            value={`${selectedMonth}-01`}
+            onChange={(iso) => setSelectedMonth(iso.slice(0, 7))}
           />
-          {monthInput.trim().length > 0 && !parsedMonth && (
-            <ThemedText type="small" style={styles.errorText}>
-              Geçerli bir ay gir (aa.yyyy)
-            </ThemedText>
-          )}
         </View>
 
-        {parsedMonth && (
-          <ThemedText type="small" themeColor="textSecondary">
-            ✅ {paidCount} ödedi · ❌ {unpaidCount} ödemedi ·{' '}
-            {rows.length - paidCount - unpaidCount} işaretlenmedi
-          </ThemedText>
-        )}
+        <ThemedText type="small" themeColor="textSecondary">
+          ✅ {paidCount} ödedi · ❌ {unpaidCount} ödemedi · {rows.length - paidCount - unpaidCount}{' '}
+          işaretlenmedi
+        </ThemedText>
 
         <View style={styles.list}>
-          {!parsedMonth ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              Aidat işaretlemek için geçerli bir ay gir.
-            </ThemedText>
-          ) : rows.length === 0 ? (
+          {rows.length === 0 ? (
             <ThemedText type="small" themeColor="textSecondary">
               Henüz kayıtlı dansçı yok.
             </ThemedText>
@@ -239,12 +214,10 @@ export default function PaymentsScreen() {
               </ThemedView>
               <ThemedView type="backgroundElement" style={styles.reportMetricCard}>
                 <ThemedText type="small" themeColor="textSecondary">
-                  {parsedMonth ? `${formatTurkishMonth(parsedMonth)} Tahsilat` : 'Tahsilat'}
+                  {formatTurkishMonth(selectedMonth)} Tahsilat
                 </ThemedText>
                 <ThemedText type="subtitle">
-                  {parsedMonth && collectionRate !== null
-                    ? `%${Math.round(collectionRate * 100)}`
-                    : '—'}
+                  {collectionRate !== null ? `%${Math.round(collectionRate * 100)}` : '—'}
                 </ThemedText>
               </ThemedView>
             </View>
@@ -330,13 +303,6 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: Spacing.one,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    fontSize: 16,
   },
   errorText: {
     color: DANGER_COLOR,
