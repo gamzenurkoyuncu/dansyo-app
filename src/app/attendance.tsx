@@ -6,7 +6,7 @@ import { DatePickerField } from '@/components/date-picker-field';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { addDaysToISO, formatTurkishDate, getTodayISO } from '@/data/mock-dancers';
 import {
   getAssignedDancerIds,
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
   },
   dancerCard: {
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     gap: Spacing.two,
   },
   dancerRow: {
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
   },
   noteInput: {
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
     fontSize: 14,
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   markButton: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     backgroundColor: 'rgba(128,128,128,0.14)',
   },
   markButtonSelectedText: {

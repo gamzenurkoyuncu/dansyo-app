@@ -6,7 +6,7 @@ import { DraggablePawn } from '@/components/draggable-pawn';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import {
   ChoreographyPawnPosition,
   ChoreographyPlan,
@@ -663,7 +663,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
@@ -676,12 +676,12 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.half,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
   },
   capacityCard: {
     gap: Spacing.one,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
   },
   stageHeaderRow: {
     flexDirection: 'row',
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   stage: {
     width: '100%',
     backgroundColor: '#1B2A20',
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     overflow: 'hidden',
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 1.5,
     backgroundColor: '#1B2A20',
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     overflow: 'hidden',
@@ -743,7 +743,7 @@ const styles = StyleSheet.create({
   planCard: {
     gap: Spacing.half,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
   },
   planHeader: {
     flexDirection: 'row',
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     padding: Spacing.four,
     gap: Spacing.three,
   },

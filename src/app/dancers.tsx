@@ -16,7 +16,7 @@ import { DatePickerField } from '@/components/date-picker-field';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { Dancer, formatTurkishDate, Gender, getAge } from '@/data/mock-dancers';
 import { formatTurkishMonth, getPaymentsForDancer } from '@/data/mock-payments';
 import {
@@ -1076,7 +1076,7 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     padding: Spacing.four,
     gap: Spacing.three,
   },
@@ -1122,7 +1122,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
@@ -1133,7 +1133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     backgroundColor: 'rgba(128,128,128,0.14)',
   },
   undoText: {
@@ -1192,7 +1192,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   profileCard: {
-    borderRadius: Spacing.four,
+    borderRadius: Radius.large,
     overflow: 'hidden',
   },
   profileRow: {

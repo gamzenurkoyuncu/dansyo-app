@@ -15,7 +15,7 @@ import { DancerCard } from '@/components/dancer-card';
 import { getAccentColor, TeamCard } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import {
   assignDancerToTeam,
   DAY_ABBREVIATIONS,
@@ -1011,7 +1011,7 @@ const styles = StyleSheet.create({
   seasonModalCard: {
     width: '100%',
     maxWidth: 320,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     padding: Spacing.three,
     gap: Spacing.half,
   },
@@ -1025,7 +1025,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
   },
   newSeasonText: {
     fontWeight: '700',
@@ -1036,7 +1036,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     backgroundColor: 'rgba(128,128,128,0.14)',
   },
   undoText: {
@@ -1060,7 +1060,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.three,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
   },
   dancerRowText: {
     gap: Spacing.half,
@@ -1089,7 +1089,7 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 420,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     padding: Spacing.four,
     gap: Spacing.three,
   },
@@ -1135,7 +1135,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,

@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import {
   CostumeArchiveEntry,
   getArchiveEntriesFor,
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
   newRegionButton: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
   },
   newRegionButtonText: {
     color: '#ffffff',
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   photoThumb: {
     width: 104,
     height: 104,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     backgroundColor: 'rgba(128,128,128,0.14)',
   },
   viewerOverlay: {
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     gap: Spacing.two,
   },
   nameCol: {

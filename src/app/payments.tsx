@@ -6,7 +6,7 @@ import { DatePickerField } from '@/components/date-picker-field';
 import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { formatTurkishMonth, getCurrentMonthISO, getPaymentStatus, setPayment } from '@/data/mock-payments';
 import { getTeamAttendanceSummary, getTeamDancerCount } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
   },
   dancerInfo: {
     gap: Spacing.half,
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   markButton: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.small,
     backgroundColor: 'rgba(128,128,128,0.14)',
   },
   markButtonSelectedText: {
@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     maxHeight: '85%',
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
     padding: Spacing.four,
     gap: Spacing.three,
   },
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.half,
     padding: Spacing.three,
-    borderRadius: Spacing.three,
+    borderRadius: Radius.medium,
   },
   reportSectionTitle: {
     marginTop: Spacing.four,

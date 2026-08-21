@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { ThemePreference, useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.one,
   },
   card: {
-    borderRadius: Spacing.four,
+    borderRadius: Radius.large,
     overflow: 'hidden',
   },
   row: {
