@@ -21,7 +21,8 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         type === 'smallBold' && styles.smallBold,
         type === 'subtitle' && styles.subtitle,
         type === 'link' && styles.link,
-        type === 'linkPrimary' && styles.linkPrimary,
+        type === 'linkPrimary' && styles.link,
+        type === 'linkPrimary' && { color: theme.primary },
         type === 'code' && styles.code,
         style,
       ]}

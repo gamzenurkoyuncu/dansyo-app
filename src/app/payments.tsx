@@ -13,11 +13,6 @@ import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 import { shareText } from '@/utils/share';
 
-const PRIMARY_COLOR = '#3c87f7';
-
-const SUCCESS_COLOR = '#27ae60';
-const DANGER_COLOR = '#e05252';
-
 export default function PaymentsScreen() {
   const safeAreaInsets = useSafeAreaInsets();
   const insets = {
@@ -107,7 +102,7 @@ export default function PaymentsScreen() {
           <Pressable
             style={({ pressed }) => pressed && styles.pressed}
             onPress={() => setReportVisible(true)}>
-            <View style={styles.reportButton}>
+            <View style={[styles.reportButton, { backgroundColor: theme.primary }]}>
               <ThemedText style={styles.reportButtonText}>📊 Sezon Özeti</ThemedText>
             </View>
           </Pressable>
@@ -147,20 +142,22 @@ export default function PaymentsScreen() {
                 <View style={styles.markButtons}>
                   <Pressable onPress={() => handleMark(dancer.id, true)}>
                     <View
-                      style={[styles.markButton, paid === true && { backgroundColor: SUCCESS_COLOR }]}>
+                      style={[styles.markButton, paid === true && { backgroundColor: theme.success }]}>
                       <ThemedText
                         type="small"
-                        style={paid === true ? styles.markButtonSelectedText : styles.successText}>
+                        themeColor="success"
+                        style={paid === true && styles.markButtonSelectedText}>
                         Ödendi
                       </ThemedText>
                     </View>
                   </Pressable>
                   <Pressable onPress={() => handleMark(dancer.id, false)}>
                     <View
-                      style={[styles.markButton, paid === false && { backgroundColor: DANGER_COLOR }]}>
+                      style={[styles.markButton, paid === false && { backgroundColor: theme.danger }]}>
                       <ThemedText
                         type="small"
-                        style={paid === false ? styles.markButtonSelectedText : styles.errorText}>
+                        themeColor="danger"
+                        style={paid === false && styles.markButtonSelectedText}>
                         Ödenmedi
                       </ThemedText>
                     </View>
@@ -181,7 +178,7 @@ export default function PaymentsScreen() {
       <ThemedView style={styles.modalOverlay}>
         <ThemedView type="backgroundElement" style={styles.modalCard}>
           <View style={styles.formHeader}>
-            <View style={[styles.formIcon, { backgroundColor: PRIMARY_COLOR + '26' }]}>
+            <View style={[styles.formIcon, { backgroundColor: theme.primarySoft }]}>
               <ThemedText style={styles.formIconGlyph}>📊</ThemedText>
             </View>
             <View style={styles.formHeaderText}>
@@ -251,7 +248,12 @@ export default function PaymentsScreen() {
           </ScrollView>
 
           <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={handleShareReport}>
-            <View style={[styles.primaryButton, styles.primaryButtonFull]}>
+            <View
+              style={[
+                styles.primaryButton,
+                styles.primaryButtonFull,
+                { backgroundColor: theme.primary },
+              ]}>
               <ThemedText style={styles.primaryButtonText}>📤 Raporu Paylaş</ThemedText>
             </View>
           </Pressable>
@@ -288,7 +290,6 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   reportButton: {
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
@@ -303,12 +304,6 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: Spacing.one,
-  },
-  errorText: {
-    color: DANGER_COLOR,
-  },
-  successText: {
-    color: SUCCESS_COLOR,
   },
   list: {
     gap: Spacing.three,
@@ -421,7 +416,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   primaryButton: {
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,

@@ -18,9 +18,6 @@ import {
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
-const PRIMARY_COLOR = '#3c87f7';
-const SUCCESS_COLOR = '#27ae60';
-const DANGER_COLOR = '#e05252';
 
 const QUICK_DATE_OFFSETS: { label: string; offset: number }[] = [
   { label: 'Bugün', offset: 0 },
@@ -123,10 +120,11 @@ export default function AttendanceScreen() {
               const isSelected = selectedDate === optionDate;
               return (
                 <Pressable key={label} onPress={() => setSelectedDate(optionDate)}>
-                  <View style={[styles.quickDateChip, isSelected && styles.quickDateChipSelected]}>
+                  <View
+                    style={[styles.quickDateChip, isSelected && { backgroundColor: theme.primary }]}>
                     <ThemedText
                       type="small"
-                      style={isSelected ? styles.quickDateChipSelectedText : undefined}>
+                      style={isSelected && styles.quickDateChipSelectedText}>
                       {label}
                     </ThemedText>
                   </View>
@@ -144,10 +142,11 @@ export default function AttendanceScreen() {
                   const isSelected = selectedDate === isoDate;
                   return (
                     <Pressable key={isoDate} onPress={() => setSelectedDate(isoDate)}>
-                      <View style={[styles.quickDateChip, isSelected && styles.quickDateChipSelected]}>
+                      <View
+                        style={[styles.quickDateChip, isSelected && { backgroundColor: theme.primary }]}>
                         <ThemedText
                           type="small"
-                          style={isSelected ? styles.quickDateChipSelectedText : undefined}>
+                          style={isSelected && styles.quickDateChipSelectedText}>
                           {formatTurkishDate(isoDate)}
                         </ThemedText>
                       </View>
@@ -197,7 +196,7 @@ export default function AttendanceScreen() {
               işaretlenmedi
             </ThemedText>
             <Pressable onPress={handleMarkAllPresent}>
-              <View style={styles.markAllButton}>
+              <View style={[styles.markAllButton, { backgroundColor: theme.primary }]}>
                 <ThemedText type="small" style={styles.markAllButtonText}>
                   Tümünü Var İşaretle
                 </ThemedText>
@@ -235,11 +234,12 @@ export default function AttendanceScreen() {
                         <View
                           style={[
                             styles.markButton,
-                            present === true && { backgroundColor: SUCCESS_COLOR },
+                            present === true && { backgroundColor: theme.success },
                           ]}>
                           <ThemedText
                             type="small"
-                            style={present === true ? styles.markButtonSelectedText : styles.successText}>
+                            themeColor="success"
+                            style={present === true && styles.markButtonSelectedText}>
                             Var
                           </ThemedText>
                         </View>
@@ -248,11 +248,12 @@ export default function AttendanceScreen() {
                         <View
                           style={[
                             styles.markButton,
-                            present === false && { backgroundColor: DANGER_COLOR },
+                            present === false && { backgroundColor: theme.danger },
                           ]}>
                           <ThemedText
                             type="small"
-                            style={present === false ? styles.markButtonSelectedText : styles.errorText}>
+                            themeColor="danger"
+                            style={present === false && styles.markButtonSelectedText}>
                             Yok
                           </ThemedText>
                         </View>
@@ -322,12 +323,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     fontSize: 16,
   },
-  errorText: {
-    color: DANGER_COLOR,
-  },
-  successText: {
-    color: SUCCESS_COLOR,
-  },
   quickDateRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -338,9 +333,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     borderRadius: Spacing.five,
     backgroundColor: 'rgba(128,128,128,0.14)',
-  },
-  quickDateChipSelected: {
-    backgroundColor: PRIMARY_COLOR,
   },
   quickDateChipSelectedText: {
     color: '#ffffff',
@@ -380,7 +372,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
-    backgroundColor: PRIMARY_COLOR,
   },
   markAllButtonText: {
     color: '#ffffff',

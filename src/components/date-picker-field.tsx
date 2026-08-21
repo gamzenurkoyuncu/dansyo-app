@@ -10,8 +10,6 @@ import { Spacing } from '@/constants/theme';
 import { formatTurkishDate } from '@/data/mock-dancers';
 import { useTheme } from '@/hooks/use-theme';
 
-const PRIMARY_COLOR = '#3c87f7';
-
 type DatePickerFieldProps = {
   value: string | null; // ISO date, yyyy-mm-dd
   onChange: (isoDate: string) => void;
@@ -90,7 +88,7 @@ export function DatePickerField({ value, onChange, placeholder }: DatePickerFiel
                 onChange={handleIOSChange}
               />
               <Pressable onPress={confirmIOSDate}>
-                <View style={styles.doneButton}>
+                <View style={[styles.doneButton, { backgroundColor: theme.primary }]}>
                   <ThemedText style={styles.doneButtonText}>Tamam</ThemedText>
                 </View>
               </Pressable>
@@ -123,7 +121,6 @@ const styles = StyleSheet.create({
   },
   doneButton: {
     alignItems: 'center',
-    backgroundColor: PRIMARY_COLOR,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.two,
   },

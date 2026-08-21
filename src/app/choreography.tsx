@@ -19,10 +19,6 @@ import { Venue } from '@/data/mock-venues';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
-const PRIMARY_COLOR = '#3c87f7';
-const DANGER_COLOR = '#e05252';
-const SUCCESS_COLOR = '#27ae60';
-
 const DEFAULT_WIDTH_SPACING = '0.75';
 const DEFAULT_DEPTH_SPACING = '1.2';
 
@@ -285,8 +281,9 @@ export default function ChoreographyScreen() {
                 const isSelected = venue.id === selectedVenueId;
                 return (
                   <Pressable key={venue.id} onPress={() => setSelectedVenueId(venue.id)}>
-                    <View style={[styles.chip, isSelected && styles.chipSelected]}>
-                      <ThemedText type="small" style={isSelected ? styles.chipSelectedText : undefined}>
+                    <View
+                      style={[styles.chip, isSelected && { backgroundColor: theme.primary }]}>
+                      <ThemedText type="small" style={isSelected && styles.chipSelectedText}>
                         {venue.name} ({venue.width}×{venue.depth}m)
                       </ThemedText>
                     </View>
@@ -294,8 +291,8 @@ export default function ChoreographyScreen() {
                 );
               })}
               <Pressable onPress={openVenueForm}>
-                <View style={styles.addChip}>
-                  <ThemedText type="small" style={styles.addChipText}>
+                <View style={[styles.addChip, { borderColor: theme.primary }]}>
+                  <ThemedText type="small" themeColor="primary" style={styles.addChipText}>
                     + Mekan Ekle
                   </ThemedText>
                 </View>
@@ -375,7 +372,7 @@ export default function ChoreographyScreen() {
                 <ThemedView type="backgroundElement" style={styles.capacityCard}>
                   <ThemedText type="smallBold">🎭 Sahne Kapasitesi</ThemedText>
                   {!isSpacingValid ? (
-                    <ThemedText type="small" style={styles.errorText}>
+                    <ThemedText type="small" themeColor="danger">
                       Geçerli bir kişi başı genişlik/derinlik değeri gir.
                     </ThemedText>
                   ) : (
@@ -384,9 +381,7 @@ export default function ChoreographyScreen() {
                         Sırada {perRow} kişi × {rowsNeeded} sıra = {depthNeeded?.toFixed(1)}m derinlik
                         gerekir ({selectedVenue.name}: {selectedVenue.width}×{selectedVenue.depth}m)
                       </ThemedText>
-                      <ThemedText
-                        type="small"
-                        style={fitsVenue ? styles.successText : styles.errorText}>
+                      <ThemedText type="small" themeColor={fitsVenue ? 'success' : 'danger'}>
                         {fitsVenue
                           ? '✅ Bu mekan bu ekip için yeterli.'
                           : `⚠️ Mekan yetersiz — derinlik ${((depthNeeded ?? 0) - selectedVenue.depth).toFixed(1)}m fazla geliyor.`}
@@ -402,7 +397,7 @@ export default function ChoreographyScreen() {
                   <Pressable
                     style={({ pressed }) => pressed && styles.pressed}
                     onPress={handleAutoArrange}>
-                    <ThemedText type="small" style={styles.autoArrangeLink}>
+                    <ThemedText type="small" themeColor="primary" style={styles.autoArrangeLink}>
                       🔄 Boya Göre Otomatik Diz
                     </ThemedText>
                   </Pressable>
@@ -460,7 +455,12 @@ export default function ChoreographyScreen() {
               </View>
 
               <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={handleSavePlan}>
-                <View style={[styles.primaryButton, styles.primaryButtonFull]}>
+                <View
+                  style={[
+                    styles.primaryButton,
+                    styles.primaryButtonFull,
+                    { backgroundColor: theme.primary },
+                  ]}>
                   <ThemedText style={styles.primaryButtonText}>💾 Bu Planı Kaydet</ThemedText>
                 </View>
               </Pressable>
@@ -577,7 +577,12 @@ export default function ChoreographyScreen() {
               style={({ pressed }) => pressed && styles.pressed}
               onPress={handleSaveVenue}>
               <View
-                style={[styles.primaryButton, styles.primaryButtonFull, !canSaveVenue && styles.disabledButton]}>
+                style={[
+                  styles.primaryButton,
+                  styles.primaryButtonFull,
+                  { backgroundColor: theme.primary },
+                  !canSaveVenue && styles.disabledButton,
+                ]}>
                 <ThemedText style={styles.primaryButtonText}>Mekanı Ekle</ThemedText>
               </View>
             </Pressable>
@@ -635,9 +640,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.five,
     backgroundColor: 'rgba(128,128,128,0.14)',
   },
-  chipSelected: {
-    backgroundColor: PRIMARY_COLOR,
-  },
   chipSelectedText: {
     color: '#ffffff',
     fontWeight: '700',
@@ -647,10 +649,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
     borderWidth: 1,
-    borderColor: PRIMARY_COLOR,
   },
   addChipText: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
   },
   spacingRow: {
@@ -667,12 +667,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
-  },
-  errorText: {
-    color: DANGER_COLOR,
-  },
-  successText: {
-    color: SUCCESS_COLOR,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -695,7 +689,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   autoArrangeLink: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
   },
   stage: {
@@ -781,7 +774,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   primaryButton: {
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,

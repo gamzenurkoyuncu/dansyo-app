@@ -8,8 +8,6 @@ import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { ThemePreference, useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
-const PRIMARY_COLOR = '#3c87f7';
-
 const THEME_OPTIONS: { value: ThemePreference; label: string; emoji: string }[] = [
   { value: 'light', label: 'Açık', emoji: '☀️' },
   { value: 'dark', label: 'Koyu', emoji: '🌙' },
@@ -73,7 +71,11 @@ export default function SettingsScreen() {
                       <ThemedText style={styles.rowEmoji}>{option.emoji}</ThemedText>
                       <ThemedText>{option.label}</ThemedText>
                     </View>
-                    {isSelected && <ThemedText style={styles.checkmark}>✓</ThemedText>}
+                    {isSelected && (
+                      <ThemedText themeColor="primary" style={styles.checkmark}>
+                        ✓
+                      </ThemedText>
+                    )}
                   </View>
                 </Pressable>
               );
@@ -161,7 +163,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   checkmark: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
     fontSize: 16,
   },

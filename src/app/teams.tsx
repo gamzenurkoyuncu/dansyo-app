@@ -45,9 +45,6 @@ import {
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
-const PRIMARY_COLOR = '#3c87f7';
-const DANGER_COLOR = '#e05252';
-
 function UndoTeamBanner({ teamName, onUndo }: { teamName: string | null; onUndo: () => void }) {
   if (!teamName) return null;
   return (
@@ -56,7 +53,7 @@ function UndoTeamBanner({ teamName, onUndo }: { teamName: string | null; onUndo:
         &quot;{teamName}&quot; silindi
       </ThemedText>
       <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={onUndo}>
-        <ThemedText type="small" style={styles.undoAction}>
+        <ThemedText type="small" themeColor="primary" style={styles.undoAction}>
           Geri Al
         </ThemedText>
       </Pressable>
@@ -136,10 +133,10 @@ export default function TeamsScreen() {
   const canCreateSeason =
     newSeasonInput.trim().length > 0 && !availableSeasons.includes(newSeasonInput.trim());
   const canSubmit = nameInput.trim().length > 0 && regionInput.trim().length > 0;
-  const formAccent = editingTeamId ? getAccentColor(editingTeamId) : PRIMARY_COLOR;
-  const assigningTeamAccent = assigningTeam ? getAccentColor(assigningTeam.id) : PRIMARY_COLOR;
-  const historyTeamAccent = historyTeam ? getAccentColor(historyTeam.id) : PRIMARY_COLOR;
-  const viewingTeamAccent = viewingTeam ? getAccentColor(viewingTeam.id) : PRIMARY_COLOR;
+  const formAccent = editingTeamId ? getAccentColor(editingTeamId) : theme.primary;
+  const assigningTeamAccent = assigningTeam ? getAccentColor(assigningTeam.id) : theme.primary;
+  const historyTeamAccent = historyTeam ? getAccentColor(historyTeam.id) : theme.primary;
+  const viewingTeamAccent = viewingTeam ? getAccentColor(viewingTeam.id) : theme.primary;
   const assignedDancerIds = assigningTeam
     ? getAssignedDancerIds(assignments, assigningTeam.id, selectedSeason)
     : [];
@@ -351,7 +348,7 @@ export default function TeamsScreen() {
             </View>
 
             <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={openAddForm}>
-              <View style={styles.addButton}>
+              <View style={[styles.addButton, { backgroundColor: theme.primary }]}>
                 <ThemedText style={styles.addButtonText}>+ Ekip Ekle</ThemedText>
               </View>
             </Pressable>
@@ -419,15 +416,18 @@ export default function TeamsScreen() {
                 <View
                   style={[
                     styles.seasonOption,
-                    season === selectedSeason && styles.seasonOptionSelected,
+                    season === selectedSeason && { backgroundColor: theme.primarySoft },
                   ]}>
                   <ThemedText
-                    style={season === selectedSeason ? styles.seasonOptionSelectedText : undefined}>
+                    themeColor={season === selectedSeason ? 'primary' : undefined}
+                    style={season === selectedSeason && styles.seasonOptionSelectedText}>
                     {season}
                     {season === currentSeason ? ' · aktif' : ''}
                   </ThemedText>
                   {season === selectedSeason && (
-                    <ThemedText style={styles.seasonOptionSelectedText}>✓</ThemedText>
+                    <ThemedText themeColor="primary" style={styles.seasonOptionSelectedText}>
+                      ✓
+                    </ThemedText>
                   )}
                 </View>
               </Pressable>
@@ -435,7 +435,9 @@ export default function TeamsScreen() {
 
             <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={openNewSeasonForm}>
               <View style={styles.seasonOption}>
-                <ThemedText style={styles.newSeasonText}>+ Yeni Sezon Başlat</ThemedText>
+                <ThemedText themeColor="primary" style={styles.newSeasonText}>
+                  + Yeni Sezon Başlat
+                </ThemedText>
               </View>
             </Pressable>
           </ThemedView>
@@ -452,7 +454,7 @@ export default function TeamsScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <ThemedView type="backgroundElement" style={styles.modalCard}>
             <View style={styles.formHeader}>
-              <View style={[styles.formIcon, { backgroundColor: PRIMARY_COLOR + '26' }]}>
+              <View style={[styles.formIcon, { backgroundColor: theme.primarySoft }]}>
                 <ThemedText style={styles.formIconGlyph}>🗓️</ThemedText>
               </View>
               <View style={styles.formHeaderText}>
@@ -481,7 +483,7 @@ export default function TeamsScreen() {
                 style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
               />
               {newSeasonInput.trim().length > 0 && !canCreateSeason && (
-                <ThemedText type="small" style={styles.errorText}>
+                <ThemedText type="small" themeColor="danger">
                   Bu sezon zaten var
                 </ThemedText>
               )}
@@ -500,6 +502,7 @@ export default function TeamsScreen() {
                 style={[
                   styles.primaryButton,
                   styles.primaryButtonFull,
+                  { backgroundColor: theme.primary },
                   !canCreateSeason && styles.disabledButton,
                 ]}>
                 <ThemedText style={styles.primaryButtonText}>Sezonu Başlat</ThemedText>
@@ -594,10 +597,9 @@ export default function TeamsScreen() {
                       key={day}
                       style={({ pressed }) => pressed && styles.pressed}
                       onPress={() => toggleSlotDay(day)}>
-                      <View style={[styles.dayChip, isSelected && styles.dayChipSelected]}>
-                        <ThemedText
-                          type="small"
-                          style={isSelected ? styles.dayChipSelectedText : undefined}>
+                      <View
+                        style={[styles.dayChip, isSelected && { backgroundColor: theme.primary }]}>
+                        <ThemedText type="small" style={isSelected && styles.dayChipSelectedText}>
                           {DAY_ABBREVIATIONS[day]}
                         </ThemedText>
                       </View>
@@ -653,7 +655,7 @@ export default function TeamsScreen() {
                       />
                     </View>
                     {conflictNames.length > 0 && (
-                      <ThemedText type="small" style={styles.errorText}>
+                      <ThemedText type="small" themeColor="danger">
                         ⚠️ {conflictNames.join(', ')} ile çakışıyor
                       </ThemedText>
                     )}
@@ -665,7 +667,7 @@ export default function TeamsScreen() {
                   (slot.startTime.length > 0 && !isValidTime(slot.startTime)) ||
                   (slot.endTime.length > 0 && !isValidTime(slot.endTime)),
               ) && (
-                <ThemedText type="small" style={styles.errorText}>
+                <ThemedText type="small" themeColor="danger">
                   Saatleri sa:dk (örn. 18:00) formatında gir
                 </ThemedText>
               )}
@@ -717,7 +719,7 @@ export default function TeamsScreen() {
                 <ThemedText themeColor="textSecondary">Vazgeç</ThemedText>
               </Pressable>
               <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={handleConfirmDelete}>
-                <View style={styles.dangerButton}>
+                <View style={[styles.dangerButton, { backgroundColor: theme.danger }]}>
                   <ThemedText style={styles.primaryButtonText}>Sil</ThemedText>
                 </View>
               </Pressable>
@@ -768,7 +770,11 @@ export default function TeamsScreen() {
                       key={dancer.id}
                       style={({ pressed }) => pressed && styles.pressed}
                       onPress={() => toggleDancerAssignment(dancer.id)}>
-                      <View style={[styles.dancerRow, isAssignedHere && styles.dancerRowSelected]}>
+                      <View
+                        style={[
+                          styles.dancerRow,
+                          isAssignedHere && { backgroundColor: theme.primarySoft },
+                        ]}>
                         <View style={styles.dancerRowText}>
                           <ThemedText>
                             {dancer.firstName} {dancer.lastName}
@@ -780,7 +786,9 @@ export default function TeamsScreen() {
                           )}
                         </View>
                         {isAssignedHere && (
-                          <ThemedText style={styles.seasonOptionSelectedText}>✓</ThemedText>
+                          <ThemedText themeColor="primary" style={styles.seasonOptionSelectedText}>
+                            ✓
+                          </ThemedText>
                         )}
                       </View>
                     </Pressable>
@@ -845,7 +853,7 @@ export default function TeamsScreen() {
                       <View style={styles.historySeasonHeader}>
                         <ThemedText type="smallBold">{season}</ThemedText>
                         {season === selectedSeason && (
-                          <ThemedText type="small" style={styles.seasonOptionSelectedText}>
+                          <ThemedText type="small" themeColor="primary" style={styles.seasonOptionSelectedText}>
                             görüntülenen sezon
                           </ThemedText>
                         )}
@@ -978,7 +986,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   addButton: {
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
@@ -1021,11 +1028,7 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.two,
   },
   newSeasonText: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
-  },
-  errorText: {
-    color: DANGER_COLOR,
   },
   undoBar: {
     flexDirection: 'row',
@@ -1040,14 +1043,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   undoAction: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
   },
-  seasonOptionSelected: {
-    backgroundColor: PRIMARY_COLOR + '20',
-  },
   seasonOptionSelectedText: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
   },
   assignList: {
@@ -1063,9 +1061,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.two,
-  },
-  dancerRowSelected: {
-    backgroundColor: PRIMARY_COLOR + '14',
   },
   dancerRowText: {
     gap: Spacing.half,
@@ -1156,9 +1151,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.five,
     backgroundColor: 'rgba(128,128,128,0.14)',
   },
-  dayChipSelected: {
-    backgroundColor: PRIMARY_COLOR,
-  },
   dayChipSelectedText: {
     color: '#ffffff',
     fontWeight: '700',
@@ -1182,7 +1174,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.two,
   },
   primaryButton: {
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
@@ -1196,7 +1187,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
   },
   dangerButton: {
-    backgroundColor: DANGER_COLOR,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,

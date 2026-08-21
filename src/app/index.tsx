@@ -11,8 +11,6 @@ import { getAttendanceForTeamDate, getTeamsPracticingToday } from '@/data/mock-t
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 
-const DANGER_COLOR = '#e05252';
-const SUCCESS_COLOR = '#27ae60';
 const UPCOMING_BIRTHDAY_WINDOW_DAYS = 7;
 
 function formatDaysUntil(days: number): string {
@@ -140,7 +138,10 @@ export default function HomeScreen() {
               return (
                 <View key={team.id} style={styles.dailyRow}>
                   <ThemedText type="small">{team.name}</ThemedText>
-                  <ThemedText type="small" style={taken ? styles.dailyTaken : styles.dailyPending}>
+                  <ThemedText
+                    type="small"
+                    themeColor={taken ? 'success' : 'danger'}
+                    style={styles.dailyStatus}>
                     {taken ? '✅ Alındı' : '⏳ Henüz alınmadı'}
                   </ThemedText>
                 </View>
@@ -170,9 +171,9 @@ export default function HomeScreen() {
         {unpaidCount > 0 && (
           <Link href="/payments" asChild>
             <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <View style={styles.alertCard}>
+              <View style={[styles.alertCard, { backgroundColor: theme.dangerSoft }]}>
                 <ThemedText style={styles.alertEmoji}>⚠️</ThemedText>
-                <ThemedText type="small" style={styles.alertText}>
+                <ThemedText type="small" themeColor="danger" style={styles.alertText}>
                   Bu ay {unpaidCount} dansçının ödemesi yapılmadı
                 </ThemedText>
               </View>
@@ -275,12 +276,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  dailyTaken: {
-    color: SUCCESS_COLOR,
-    fontWeight: '700',
-  },
-  dailyPending: {
-    color: DANGER_COLOR,
+  dailyStatus: {
     fontWeight: '700',
   },
   alertCard: {
@@ -290,14 +286,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
     borderRadius: Spacing.four,
-    backgroundColor: 'rgba(224,82,82,0.14)',
   },
   alertEmoji: {
     fontSize: 18,
   },
   alertText: {
     flex: 1,
-    color: DANGER_COLOR,
     fontWeight: '700',
   },
   linkList: {

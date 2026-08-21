@@ -18,9 +18,6 @@ import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
 import { shareText } from '@/utils/share';
 
-const PRIMARY_COLOR = '#3c87f7';
-const DANGER_COLOR = '#e05252';
-
 export default function CostumesScreen() {
   const safeAreaInsets = useSafeAreaInsets();
   const insets = {
@@ -143,19 +140,27 @@ export default function CostumesScreen() {
 
         <View style={styles.viewModeRow}>
           <Pressable onPress={() => setViewMode('olcu')}>
-            <View style={[styles.viewModeChip, viewMode === 'olcu' && styles.viewModeChipSelected]}>
+            <View
+              style={[
+                styles.viewModeChip,
+                viewMode === 'olcu' && { backgroundColor: theme.primary },
+              ]}>
               <ThemedText
                 type="small"
-                style={viewMode === 'olcu' ? styles.viewModeChipSelectedText : undefined}>
+                style={viewMode === 'olcu' && styles.viewModeChipSelectedText}>
                 📏 Ölçüler
               </ThemedText>
             </View>
           </Pressable>
           <Pressable onPress={() => setViewMode('arsiv')}>
-            <View style={[styles.viewModeChip, viewMode === 'arsiv' && styles.viewModeChipSelected]}>
+            <View
+              style={[
+                styles.viewModeChip,
+                viewMode === 'arsiv' && { backgroundColor: theme.primary },
+              ]}>
               <ThemedText
                 type="small"
-                style={viewMode === 'arsiv' ? styles.viewModeChipSelectedText : undefined}>
+                style={viewMode === 'arsiv' && styles.viewModeChipSelectedText}>
                 🗄️ Arşiv
               </ThemedText>
             </View>
@@ -206,7 +211,7 @@ export default function CostumesScreen() {
               <Pressable
                 style={({ pressed }) => pressed && styles.pressed}
                 onPress={handleShare}>
-                <View style={styles.shareButton}>
+                <View style={[styles.shareButton, { backgroundColor: theme.primary }]}>
                   <ThemedText style={styles.shareButtonText}>📤 Listeyi Paylaş</ThemedText>
                 </View>
               </Pressable>
@@ -214,8 +219,10 @@ export default function CostumesScreen() {
               {sizeDistribution.length > 0 && (
                 <View style={styles.sizeDistributionRow}>
                   {sizeDistribution.map(([size, count]) => (
-                    <View key={size} style={styles.sizeDistributionChip}>
-                      <ThemedText type="small" style={styles.sizeDistributionText}>
+                    <View
+                      key={size}
+                      style={[styles.sizeDistributionChip, { backgroundColor: theme.primarySoft }]}>
+                      <ThemedText type="small" themeColor="primary" style={styles.sizeDistributionText}>
                         {count}x {size}
                       </ThemedText>
                     </View>
@@ -270,10 +277,11 @@ export default function CostumesScreen() {
                   const isSelected = season === archiveSeason;
                   return (
                     <Pressable key={season} onPress={() => setArchiveSeason(season)}>
-                      <View style={[styles.teamChip, isSelected && styles.archiveChipSelected]}>
+                      <View
+                        style={[styles.teamChip, isSelected && { backgroundColor: theme.primary }]}>
                         <ThemedText
                           type="small"
-                          style={isSelected ? styles.archiveChipSelectedText : undefined}>
+                          style={isSelected && styles.archiveChipSelectedText}>
                           {season}
                         </ThemedText>
                       </View>
@@ -293,10 +301,14 @@ export default function CostumesScreen() {
                     const isSelected = name === selectedRegion;
                     return (
                       <Pressable key={name} onPress={() => setSelectedRegion(name)}>
-                        <View style={[styles.teamChip, isSelected && styles.archiveChipSelected]}>
+                        <View
+                          style={[
+                            styles.teamChip,
+                            isSelected && { backgroundColor: theme.primary },
+                          ]}>
                           <ThemedText
                             type="small"
-                            style={isSelected ? styles.archiveChipSelectedText : undefined}>
+                            style={isSelected && styles.archiveChipSelectedText}>
                             {name}
                           </ThemedText>
                         </View>
@@ -324,6 +336,7 @@ export default function CostumesScreen() {
                   <View
                     style={[
                       styles.newRegionButton,
+                      { backgroundColor: theme.primary },
                       newRegionInput.trim().length === 0 && styles.disabledButton,
                     ]}>
                     <ThemedText style={styles.newRegionButtonText}>Ekle</ThemedText>
@@ -339,7 +352,7 @@ export default function CostumesScreen() {
             ) : (
               <View style={styles.list}>
                 <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={handleAddPhoto}>
-                  <View style={styles.shareButton}>
+                  <View style={[styles.shareButton, { backgroundColor: theme.primary }]}>
                     <ThemedText style={styles.shareButtonText}>📷 Fotoğraf Ekle</ThemedText>
                   </View>
                 </Pressable>
@@ -380,7 +393,11 @@ export default function CostumesScreen() {
             <ThemedText style={styles.viewerButtonText}>Kapat</ThemedText>
           </Pressable>
           <Pressable
-            style={({ pressed }) => [styles.viewerButton, styles.viewerDeleteButton, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.viewerButton,
+              { backgroundColor: theme.danger },
+              pressed && styles.pressed,
+            ]}
             onPress={handleDeletePhoto}>
             <ThemedText style={styles.viewerButtonText}>🗑️ Sil</ThemedText>
           </Pressable>
@@ -420,15 +437,9 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.five,
     backgroundColor: 'rgba(128,128,128,0.14)',
   },
-  viewModeChipSelected: {
-    backgroundColor: PRIMARY_COLOR,
-  },
   viewModeChipSelectedText: {
     color: '#ffffff',
     fontWeight: '700',
-  },
-  archiveChipSelected: {
-    backgroundColor: PRIMARY_COLOR,
   },
   archiveChipSelectedText: {
     color: '#ffffff',
@@ -453,7 +464,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   newRegionButton: {
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.two,
@@ -497,9 +507,6 @@ const styles = StyleSheet.create({
     borderRadius: Spacing.five,
     backgroundColor: 'rgba(255,255,255,0.14)',
   },
-  viewerDeleteButton: {
-    backgroundColor: DANGER_COLOR,
-  },
   viewerButtonText: {
     color: '#ffffff',
     fontWeight: '700',
@@ -525,7 +532,6 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     alignSelf: 'flex-start',
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
@@ -546,10 +552,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.two,
     paddingVertical: Spacing.one,
     borderRadius: Spacing.five,
-    backgroundColor: PRIMARY_COLOR + '1a',
   },
   sizeDistributionText: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
   },
   tableHeader: {

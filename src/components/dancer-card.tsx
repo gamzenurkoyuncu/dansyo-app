@@ -5,8 +5,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { Dancer, getAge } from '@/data/mock-dancers';
+import { useTheme } from '@/hooks/use-theme';
 
-const DANGER_COLOR = '#e05252';
 const CONSECUTIVE_ABSENCE_THRESHOLD = 3;
 
 type DancerCardProps = {
@@ -26,6 +26,7 @@ export function DancerCard({
   onEdit,
   onDelete,
 }: DancerCardProps) {
+  const theme = useTheme();
   const accent = getAccentColor(dancer.id);
   const age = getAge(dancer.birthDate);
   const initials = `${dancer.firstName.charAt(0)}${dancer.lastName.charAt(0)}`.toUpperCase();
@@ -57,7 +58,7 @@ export function DancerCard({
           )}
           {consecutiveAbsences !== undefined &&
             consecutiveAbsences >= CONSECUTIVE_ABSENCE_THRESHOLD && (
-              <ThemedText type="small" style={styles.absenceWarning}>
+              <ThemedText type="small" themeColor="danger" style={styles.absenceWarning}>
                 ⚠️ {consecutiveAbsences} kez üst üste devamsız
               </ThemedText>
             )}
@@ -86,7 +87,7 @@ export function DancerCard({
                 hitSlop={8}
                 style={({ pressed }) => [
                   styles.iconButton,
-                  styles.deleteButton,
+                  { backgroundColor: theme.dangerSoft },
                   pressed && styles.pressed,
                 ]}
                 onPress={onDelete}>
@@ -137,7 +138,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   absenceWarning: {
-    color: DANGER_COLOR,
     fontWeight: '700',
     marginTop: Spacing.half,
   },
@@ -152,9 +152,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(128,128,128,0.14)',
-  },
-  deleteButton: {
-    backgroundColor: 'rgba(224,82,82,0.14)',
   },
   iconGlyph: {
     fontSize: 14,

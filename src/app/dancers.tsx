@@ -36,10 +36,6 @@ import {
 } from '@/utils/dancer-import';
 import { shareText } from '@/utils/share';
 
-const PRIMARY_COLOR = '#3c87f7';
-const DANGER_COLOR = '#e05252';
-const SUCCESS_COLOR = '#27ae60';
-
 function UndoDancerBanner({
   dancer,
   onUndo,
@@ -54,7 +50,7 @@ function UndoDancerBanner({
         &quot;{dancer.firstName} {dancer.lastName}&quot; silindi
       </ThemedText>
       <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={onUndo}>
-        <ThemedText type="small" style={styles.undoAction}>
+        <ThemedText type="small" themeColor="primary" style={styles.undoAction}>
           Geri Al
         </ThemedText>
       </Pressable>
@@ -348,7 +344,7 @@ export default function DancersScreen() {
                 <ThemedText style={styles.shareButtonGlyph}>📥</ThemedText>
               </Pressable>
               <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={openAddForm}>
-                <View style={styles.addButton}>
+                <View style={[styles.addButton, { backgroundColor: theme.primary }]}>
                   <ThemedText style={styles.addButtonText}>+ Dansçı Ekle</ThemedText>
                 </View>
               </Pressable>
@@ -367,20 +363,27 @@ export default function DancersScreen() {
 
           <View style={styles.viewModeRow}>
             <Pressable onPress={() => setViewMode('list')}>
-              <View style={[styles.viewModeChip, viewMode === 'list' && styles.viewModeChipSelected]}>
+              <View
+                style={[
+                  styles.viewModeChip,
+                  viewMode === 'list' && { backgroundColor: theme.primary },
+                ]}>
                 <ThemedText
                   type="small"
-                  style={viewMode === 'list' ? styles.viewModeChipSelectedText : undefined}>
+                  style={viewMode === 'list' && styles.viewModeChipSelectedText}>
                   📋 Liste
                 </ThemedText>
               </View>
             </Pressable>
             <Pressable onPress={() => setViewMode('grouped')}>
               <View
-                style={[styles.viewModeChip, viewMode === 'grouped' && styles.viewModeChipSelected]}>
+                style={[
+                  styles.viewModeChip,
+                  viewMode === 'grouped' && { backgroundColor: theme.primary },
+                ]}>
                 <ThemedText
                   type="small"
-                  style={viewMode === 'grouped' ? styles.viewModeChipSelectedText : undefined}>
+                  style={viewMode === 'grouped' && styles.viewModeChipSelectedText}>
                   🎽 Ekibe Göre
                 </ThemedText>
               </View>
@@ -443,7 +446,7 @@ export default function DancersScreen() {
           <ThemedView type="backgroundElement" style={[styles.modalCard, styles.scrollableModalCard]}>
             <ScrollView contentContainerStyle={styles.formScrollContent}>
             <View style={styles.formHeader}>
-              <View style={styles.formIcon}>
+              <View style={[styles.formIcon, { backgroundColor: theme.primarySoft }]}>
                 <ThemedText style={styles.formIconGlyph}>{editingDancerId ? '✏️' : '➕'}</ThemedText>
               </View>
               <View style={styles.formHeaderText}>
@@ -525,7 +528,7 @@ export default function DancersScreen() {
                 style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
               />
               {feeInput.length > 0 && !isFeeValid && (
-                <ThemedText type="small" style={styles.errorText}>
+                <ThemedText type="small" themeColor="danger">
                   Geçerli bir tutar gir
                 </ThemedText>
               )}
@@ -597,10 +600,14 @@ export default function DancersScreen() {
                     <Pressable
                       key={gender}
                       onPress={() => setGenderInput(isSelected ? null : gender)}>
-                      <View style={[styles.viewModeChip, isSelected && styles.viewModeChipSelected]}>
+                      <View
+                        style={[
+                          styles.viewModeChip,
+                          isSelected && { backgroundColor: theme.primary },
+                        ]}>
                         <ThemedText
                           type="small"
-                          style={isSelected ? styles.viewModeChipSelectedText : undefined}>
+                          style={isSelected && styles.viewModeChipSelectedText}>
                           {gender}
                         </ThemedText>
                       </View>
@@ -628,7 +635,12 @@ export default function DancersScreen() {
               style={({ pressed }) => pressed && styles.pressed}
               onPress={handleSaveDancer}>
               <View
-                style={[styles.primaryButton, styles.primaryButtonFull, !canSubmit && styles.disabledButton]}>
+                style={[
+                  styles.primaryButton,
+                  styles.primaryButtonFull,
+                  { backgroundColor: theme.primary },
+                  !canSubmit && styles.disabledButton,
+                ]}>
                 <ThemedText style={styles.primaryButtonText}>
                   {editingDancerId ? 'Kaydet' : 'Dansçı Ekle'}
                 </ThemedText>
@@ -664,7 +676,7 @@ export default function DancersScreen() {
                 <ThemedText themeColor="textSecondary">Vazgeç</ThemedText>
               </Pressable>
               <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={handleConfirmDelete}>
-                <View style={styles.dangerButton}>
+                <View style={[styles.dangerButton, { backgroundColor: theme.danger }]}>
                   <ThemedText style={styles.primaryButtonText}>Sil</ThemedText>
                 </View>
               </Pressable>
@@ -715,7 +727,7 @@ export default function DancersScreen() {
         <ThemedView style={styles.modalOverlay}>
           <ThemedView type="backgroundElement" style={[styles.modalCard, styles.scrollableModalCard]}>
             <View style={styles.formHeader}>
-              <View style={[styles.formIcon, { backgroundColor: PRIMARY_COLOR + '26' }]}>
+              <View style={[styles.formIcon, { backgroundColor: theme.primarySoft }]}>
                 <ThemedText style={styles.formIconGlyph}>📥</ThemedText>
               </View>
               <View style={styles.formHeaderText}>
@@ -742,7 +754,7 @@ export default function DancersScreen() {
                 </ThemedText>
 
                 {importError && (
-                  <ThemedText type="small" style={styles.errorText}>
+                  <ThemedText type="small" themeColor="danger">
                     {importError}
                   </ThemedText>
                 )}
@@ -750,7 +762,7 @@ export default function DancersScreen() {
                 <Pressable
                   style={({ pressed }) => pressed && styles.pressed}
                   onPress={shareDancerImportTemplate}>
-                  <ThemedText type="small" style={styles.templateLink}>
+                  <ThemedText type="small" themeColor="primary" style={styles.templateLink}>
                     📄 Örnek Şablonu İndir
                   </ThemedText>
                 </Pressable>
@@ -760,7 +772,12 @@ export default function DancersScreen() {
                   style={({ pressed }) => pressed && styles.pressed}
                   onPress={handlePickImportFile}>
                   <View
-                    style={[styles.primaryButton, styles.primaryButtonFull, isImporting && styles.disabledButton]}>
+                    style={[
+                      styles.primaryButton,
+                      styles.primaryButtonFull,
+                      { backgroundColor: theme.primary },
+                      isImporting && styles.disabledButton,
+                    ]}>
                     <ThemedText style={styles.primaryButtonText}>
                       {isImporting ? 'Okunuyor…' : '📁 Excel Dosyası Seç'}
                     </ThemedText>
@@ -783,7 +800,7 @@ export default function DancersScreen() {
                         <View style={styles.importRowText}>
                           <ThemedText style={styles.dancerName}>{row.displayName}</ThemedText>
                           {row.errors.length > 0 && (
-                            <ThemedText type="small" style={styles.errorText}>
+                            <ThemedText type="small" themeColor="danger">
                               {row.errors.join(', ')}
                             </ThemedText>
                           )}
@@ -801,6 +818,7 @@ export default function DancersScreen() {
                     style={[
                       styles.primaryButton,
                       styles.primaryButtonFull,
+                      { backgroundColor: theme.primary },
                       importRows.filter((row) => row.dancer !== null).length === 0 &&
                         styles.disabledButton,
                     ]}>
@@ -928,9 +946,7 @@ function ProfileContent({
                     {teams.find((team) => team.id === record.teamId)?.name ?? 'Bilinmeyen ekip'}
                   </ThemedText>
                 </View>
-                <ThemedText
-                  type="small"
-                  style={record.present ? styles.successText : styles.errorText}>
+                <ThemedText type="small" themeColor={record.present ? 'success' : 'danger'}>
                   {record.present ? 'Var' : 'Yok'}
                 </ThemedText>
               </View>
@@ -957,9 +973,7 @@ function ProfileContent({
                   index < paymentHistory.length - 1 && styles.profileRowDivider,
                 ]}>
                 <ThemedText type="small">{formatTurkishMonth(record.month)}</ThemedText>
-                <ThemedText
-                  type="small"
-                  style={record.paid ? styles.successText : styles.errorText}>
+                <ThemedText type="small" themeColor={record.paid ? 'success' : 'danger'}>
                   {record.paid ? 'Ödendi' : 'Ödenmedi'}
                 </ThemedText>
               </View>
@@ -1012,7 +1026,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   addButton: {
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
@@ -1041,9 +1054,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
     backgroundColor: 'rgba(128,128,128,0.14)',
-  },
-  viewModeChipSelected: {
-    backgroundColor: PRIMARY_COLOR,
   },
   viewModeChipSelectedText: {
     color: '#ffffff',
@@ -1088,7 +1098,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: PRIMARY_COLOR + '26',
   },
   formIconGlyph: {
     fontSize: 18,
@@ -1118,12 +1127,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     fontSize: 16,
   },
-  errorText: {
-    color: DANGER_COLOR,
-  },
-  successText: {
-    color: SUCCESS_COLOR,
-  },
   undoBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1137,7 +1140,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   undoAction: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
   },
   teamPill: {
@@ -1208,7 +1210,6 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
   },
   primaryButton: {
-    backgroundColor: PRIMARY_COLOR,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
@@ -1229,7 +1230,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.two,
   },
   dangerButton: {
-    backgroundColor: DANGER_COLOR,
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
@@ -1267,7 +1267,6 @@ const styles = StyleSheet.create({
     gap: Spacing.half,
   },
   templateLink: {
-    color: PRIMARY_COLOR,
     fontWeight: '700',
     textAlign: 'center',
   },
