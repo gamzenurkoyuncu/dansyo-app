@@ -27,6 +27,12 @@ import {
 } from '@/data/mock-teams';
 import { useAppData } from '@/hooks/use-app-data';
 import { useTheme } from '@/hooks/use-theme';
+import {
+  ParsedDancerRow,
+  pickAndParseDancersFile,
+  shareDancerImportTemplate,
+  TEMPLATE_HEADERS,
+} from '@/utils/dancer-import';
 import { shareText } from '@/utils/share';
 
 const PRIMARY_COLOR = '#3c87f7';
@@ -94,6 +100,10 @@ export default function DancersScreen() {
     dancer: Dancer;
     assignments: TeamAssignment[];
   } | null>(null);
+  const [isImportVisible, setImportVisible] = useState(false);
+  const [importRows, setImportRows] = useState<ParsedDancerRow[] | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!undoDancer) return;
@@ -258,6 +268,39 @@ export default function DancersScreen() {
     shareText(message);
   }
 
+  async function handlePickImportFile() {
+    setImportError(null);
+    setIsImporting(true);
+    try {
+      const rows = await pickAndParseDancersFile();
+      if (rows !== null) {
+        setImportRows(rows);
+      }
+    } catch {
+      setImportError('Dosya okunamadı. Lütfen geçerli bir Excel (.xlsx) dosyası seç.');
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  function handleCloseImport() {
+    setImportVisible(false);
+    setImportRows(null);
+    setImportError(null);
+  }
+
+  function handleConfirmImport() {
+    if (!importRows) return;
+    const validRows = importRows.filter((row) => row.dancer !== null);
+    if (validRows.length === 0) return;
+    const newDancers: Dancer[] = validRows.map((row, index) => ({
+      ...(row.dancer as Omit<Dancer, 'id'>),
+      id: `${Date.now()}-${index}`,
+    }));
+    setDancers((prev) => [...prev, ...newDancers]);
+    handleCloseImport();
+  }
+
   const contentPlatformStyle = Platform.select({
     android: {
       paddingTop: insets.top,
@@ -292,6 +335,12 @@ export default function DancersScreen() {
                 style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}
                 onPress={handleShare}>
                 <ThemedText style={styles.shareButtonGlyph}>📤</ThemedText>
+              </Pressable>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.shareButton, pressed && styles.pressed]}
+                onPress={() => setImportVisible(true)}>
+                <ThemedText style={styles.shareButtonGlyph}>📥</ThemedText>
               </Pressable>
               <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={openAddForm}>
                 <View style={styles.addButton}>
@@ -634,6 +683,120 @@ export default function DancersScreen() {
               )}
             </View>
           </ScrollView>
+        </ThemedView>
+      </Modal>
+
+      <Modal
+        visible={isImportVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={handleCloseImport}>
+        <ThemedView style={styles.modalOverlay}>
+          <ThemedView type="backgroundElement" style={[styles.modalCard, styles.scrollableModalCard]}>
+            <View style={styles.formHeader}>
+              <View style={[styles.formIcon, { backgroundColor: PRIMARY_COLOR + '26' }]}>
+                <ThemedText style={styles.formIconGlyph}>📥</ThemedText>
+              </View>
+              <View style={styles.formHeaderText}>
+                <ThemedText type="subtitle">Dansçıları İçe Aktar</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {importRows
+                    ? `${importRows.filter((row) => row.dancer !== null).length} geçerli · ${importRows.filter((row) => row.dancer === null).length} hatalı`
+                    : 'Excel dosyasından toplu ekle'}
+                </ThemedText>
+              </View>
+              <Pressable
+                hitSlop={8}
+                style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+                onPress={handleCloseImport}>
+                <ThemedText style={styles.closeGlyph}>✕</ThemedText>
+              </Pressable>
+            </View>
+
+            {importRows === null ? (
+              <View style={styles.importStart}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  Beklenen sütunlar: {TEMPLATE_HEADERS.join(', ')}. Ad, Soyad, Doğum Tarihi ve Aylık
+                  Ücret zorunludur.
+                </ThemedText>
+
+                {importError && (
+                  <ThemedText type="small" style={styles.errorText}>
+                    {importError}
+                  </ThemedText>
+                )}
+
+                <Pressable
+                  style={({ pressed }) => pressed && styles.pressed}
+                  onPress={shareDancerImportTemplate}>
+                  <ThemedText type="small" style={styles.templateLink}>
+                    📄 Örnek Şablonu İndir
+                  </ThemedText>
+                </Pressable>
+
+                <Pressable
+                  disabled={isImporting}
+                  style={({ pressed }) => pressed && styles.pressed}
+                  onPress={handlePickImportFile}>
+                  <View
+                    style={[styles.primaryButton, styles.primaryButtonFull, isImporting && styles.disabledButton]}>
+                    <ThemedText style={styles.primaryButtonText}>
+                      {isImporting ? 'Okunuyor…' : '📁 Excel Dosyası Seç'}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <ScrollView contentContainerStyle={styles.importScrollContent}>
+                  {importRows.length === 0 ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      Dosyada satır bulunamadı.
+                    </ThemedText>
+                  ) : (
+                    importRows.map((row) => (
+                      <View key={row.rowNumber} style={styles.importRow}>
+                        <ThemedText style={styles.importRowStatus}>
+                          {row.dancer ? '✅' : '❌'}
+                        </ThemedText>
+                        <View style={styles.importRowText}>
+                          <ThemedText style={styles.dancerName}>{row.displayName}</ThemedText>
+                          {row.errors.length > 0 && (
+                            <ThemedText type="small" style={styles.errorText}>
+                              {row.errors.join(', ')}
+                            </ThemedText>
+                          )}
+                        </View>
+                      </View>
+                    ))
+                  )}
+                </ScrollView>
+
+                <Pressable
+                  disabled={importRows.filter((row) => row.dancer !== null).length === 0}
+                  style={({ pressed }) => pressed && styles.pressed}
+                  onPress={handleConfirmImport}>
+                  <View
+                    style={[
+                      styles.primaryButton,
+                      styles.primaryButtonFull,
+                      importRows.filter((row) => row.dancer !== null).length === 0 &&
+                        styles.disabledButton,
+                    ]}>
+                    <ThemedText style={styles.primaryButtonText}>
+                      {importRows.filter((row) => row.dancer !== null).length} Dansçıyı Ekle
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              </>
+            )}
+
+            <Pressable
+              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+              onPress={handleCloseImport}>
+              <ThemedText themeColor="textSecondary">İptal</ThemedText>
+            </Pressable>
+          </ThemedView>
         </ThemedView>
       </Modal>
     </>
@@ -1053,5 +1216,34 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '700',
     fontSize: 14,
+  },
+  dancerName: {
+    fontWeight: '700',
+  },
+  importScrollContent: {
+    gap: Spacing.two,
+  },
+  importStart: {
+    gap: Spacing.three,
+  },
+  importRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(128,128,128,0.2)',
+  },
+  importRowStatus: {
+    fontSize: 16,
+  },
+  importRowText: {
+    flex: 1,
+    gap: Spacing.half,
+  },
+  templateLink: {
+    color: PRIMARY_COLOR,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });
