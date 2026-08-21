@@ -1,6 +1,6 @@
 import { View, type ViewProps } from 'react-native';
 
-import { CardShadow, ThemeColor } from '@/constants/theme';
+import { CardShadow, Radius, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export type ThemedViewProps = ViewProps & {
@@ -18,7 +18,7 @@ export function ThemedView({ style, lightColor, darkColor, type, ...otherProps }
       style={[
         { backgroundColor: theme[type ?? 'background'] },
         isCard && CardShadow,
-        isCard && { borderWidth: 1, borderColor: theme.border },
+        isCard && { borderWidth: 1, borderColor: theme.border, borderRadius: Radius.large },
         style,
       ]}
       {...otherProps}

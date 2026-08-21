@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { Dancer, getDaysUntilNextBirthday, getTodayISO } from '@/data/mock-dancers';
 import { getCurrentMonthISO, getUnpaidCount } from '@/data/mock-payments';
 import { getAttendanceForTeamDate, getTeamsPracticingToday } from '@/data/mock-teams';
@@ -27,11 +27,12 @@ type QuickLinkCardProps = {
 };
 
 function QuickLinkCard({ href, emoji, title, subtitle }: QuickLinkCardProps) {
+  const theme = useTheme();
   return (
     <Link href={href} asChild>
       <Pressable style={({ pressed }) => [styles.quickLinkPressable, pressed && styles.pressed]}>
         <ThemedView type="backgroundElement" style={styles.quickLink}>
-          <View style={styles.quickLinkIcon}>
+          <View style={[styles.quickLinkIcon, { backgroundColor: theme.primarySoft }]}>
             <ThemedText style={styles.quickLinkEmoji}>{emoji}</ThemedText>
           </View>
           <View style={styles.quickLinkText}>
@@ -252,7 +253,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    borderRadius: Radius.large,
   },
   summaryItem: {
     alignItems: 'center',
@@ -269,7 +270,7 @@ const styles = StyleSheet.create({
   dailyCard: {
     gap: Spacing.two,
     padding: Spacing.three,
-    borderRadius: Spacing.four,
+    borderRadius: Radius.large,
   },
   dailyRow: {
     flexDirection: 'row',
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    borderRadius: Spacing.four,
+    borderRadius: Radius.large,
   },
   alertEmoji: {
     fontSize: 18,
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.three,
-    borderRadius: Spacing.four,
+    borderRadius: Radius.large,
   },
   quickLinkIcon: {
     width: 44,
@@ -315,7 +316,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(60,135,247,0.16)',
   },
   quickLinkEmoji: {
     fontSize: 20,
