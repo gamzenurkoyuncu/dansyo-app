@@ -1,4 +1,7 @@
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 
@@ -37,14 +40,23 @@ export function DatePickerField({ value, onChange, placeholder }: DatePickerFiel
   const [pendingDate, setPendingDate] = useState<Date>(() => fromISO(value));
 
   function openPicker() {
+    if (Platform.OS === 'android') {
+      // Android's community-recommended API: an imperative dialog, not a
+      // mounted component — the declarative <DateTimePicker> render-prop
+      // form is unreliable on Android (selections can silently fail to
+      // commit, especially on repeated opens).
+      DateTimePickerAndroid.open({
+        value: fromISO(value),
+        mode: 'date',
+        display: 'calendar',
+        onChange: (event: DateTimePickerEvent, selected?: Date) => {
+          if (event.type === 'set' && selected) onChange(toISO(selected));
+        },
+      });
+      return;
+    }
     setPendingDate(fromISO(value));
     setVisible(true);
-  }
-
-  function handleAndroidChange(event: DateTimePickerEvent, selected?: Date) {
-    setVisible(false);
-    if (event.type === 'dismissed' || !selected) return;
-    onChange(toISO(selected));
   }
 
   function handleIOSChange(event: DateTimePickerEvent, selected?: Date) {
@@ -66,15 +78,6 @@ export function DatePickerField({ value, onChange, placeholder }: DatePickerFiel
           </ThemedText>
         </View>
       </Pressable>
-
-      {isVisible && Platform.OS === 'android' && (
-        <DateTimePicker
-          value={fromISO(value)}
-          mode="date"
-          display="calendar"
-          onChange={handleAndroidChange}
-        />
-      )}
 
       {Platform.OS === 'ios' && (
         <Modal visible={isVisible} animationType="fade" transparent onRequestClose={confirmIOSDate}>
