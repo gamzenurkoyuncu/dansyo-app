@@ -32,6 +32,15 @@ export default function CostumesScreen() {
         .filter((dancer) => dancer !== undefined)
     : [];
 
+  const sizeDistribution = Object.entries(
+    teamDancers.reduce<Record<string, number>>((counts, dancer) => {
+      const size = dancer.costumeSize.trim();
+      if (!size) return counts;
+      counts[size] = (counts[size] ?? 0) + 1;
+      return counts;
+    }, {}),
+  ).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'tr'));
+
   function handleShare() {
     if (!selectedTeam || teamDancers.length === 0) return;
     const lines = teamDancers.map((dancer) => {
@@ -119,6 +128,18 @@ export default function CostumesScreen() {
                   <ThemedText style={styles.shareButtonText}>📤 Listeyi Paylaş</ThemedText>
                 </View>
               </Pressable>
+
+              {sizeDistribution.length > 0 && (
+                <View style={styles.sizeDistributionRow}>
+                  {sizeDistribution.map(([size, count]) => (
+                    <View key={size} style={styles.sizeDistributionChip}>
+                      <ThemedText type="small" style={styles.sizeDistributionText}>
+                        {count}x {size}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+              )}
 
               <View style={styles.tableHeader}>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.nameCol}>
@@ -211,6 +232,22 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '700',
     fontSize: 14,
+  },
+  sizeDistributionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.one,
+    marginBottom: Spacing.one,
+  },
+  sizeDistributionChip: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.five,
+    backgroundColor: PRIMARY_COLOR + '1a',
+  },
+  sizeDistributionText: {
+    color: PRIMARY_COLOR,
+    fontWeight: '700',
   },
   tableHeader: {
     flexDirection: 'row',
