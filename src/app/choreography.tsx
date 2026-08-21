@@ -6,6 +6,11 @@ import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import {
+  ChoreographyPlan,
+  ChoreographyPlanRow,
+  getPlansForTeam,
+} from '@/data/mock-choreography-plans';
 import { Dancer } from '@/data/mock-dancers';
 import { getAssignedDancerIds } from '@/data/mock-teams';
 import { Venue } from '@/data/mock-venues';
@@ -27,7 +32,17 @@ export default function ChoreographyScreen() {
   };
   const theme = useTheme();
 
-  const { teams, dancers, assignments, currentSeason, venues, setVenues } = useAppData();
+  const {
+    teams,
+    dancers,
+    assignments,
+    currentSeason,
+    venues,
+    setVenues,
+    choreographyPlans,
+    setChoreographyPlans,
+  } = useAppData();
+  const [noteInput, setNoteInput] = useState('');
 
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(teams[0]?.id ?? null);
   const [selectedVenueId, setSelectedVenueId] = useState<string | null>(venues[0]?.id ?? null);
@@ -88,6 +103,42 @@ export default function ChoreographyScreen() {
     for (let i = 0; i < dancersWithHeight.length; i += perRow) {
       rows.push(dancersWithHeight.slice(i, i + perRow));
     }
+  }
+
+  const teamPlans = selectedTeam ? getPlansForTeam(choreographyPlans, selectedTeam.id) : [];
+
+  function handleSavePlan() {
+    if (!selectedTeam) return;
+    const planRows: ChoreographyPlanRow[] = rows.map((row, index) => ({
+      rowNumber: index + 1,
+      summary: row
+        .map((entry) => `${entry.dancer.firstName} ${entry.dancer.lastName} (${entry.height}cm)`)
+        .join(', '),
+    }));
+    const newPlan: ChoreographyPlan = {
+      id: Date.now().toString(),
+      teamId: selectedTeam.id,
+      teamName: selectedTeam.name,
+      season: currentSeason,
+      venueName: selectedVenue
+        ? `${selectedVenue.name} (${selectedVenue.width}×${selectedVenue.depth}m)`
+        : null,
+      note: noteInput.trim(),
+      dancerCount: teamDancers.length,
+      maleCount,
+      femaleCount,
+      unspecifiedGenderCount,
+      avgHeight,
+      fitsVenue,
+      rows: planRows,
+      createdAt: new Date().toISOString(),
+    };
+    setChoreographyPlans((prev) => [...prev, newPlan]);
+    setNoteInput('');
+  }
+
+  function handleDeletePlan(planId: string) {
+    setChoreographyPlans((prev) => prev.filter((plan) => plan.id !== planId));
   }
 
   function openVenueForm() {
@@ -304,7 +355,65 @@ export default function ChoreographyScreen() {
                   ))}
                 </View>
               )}
+
+              <View style={styles.field}>
+                <ThemedText type="small" themeColor="textSecondary">
+                  📝 Not (opsiyonel)
+                </ThemedText>
+                <TextInput
+                  value={noteInput}
+                  onChangeText={setNoteInput}
+                  placeholder="örn. 2. figür değişti, kızlar öne geçti"
+                  placeholderTextColor={theme.textSecondary}
+                  style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
+                />
+              </View>
+
+              <Pressable style={({ pressed }) => pressed && styles.pressed} onPress={handleSavePlan}>
+                <View style={[styles.primaryButton, styles.primaryButtonFull]}>
+                  <ThemedText style={styles.primaryButtonText}>💾 Bu Planı Kaydet</ThemedText>
+                </View>
+              </Pressable>
             </>
+          )}
+
+          {selectedTeam && teamPlans.length > 0 && (
+            <View style={styles.field}>
+              <ThemedText type="smallBold">🕘 Geçmiş Planlar</ThemedText>
+              {teamPlans.map((plan) => (
+                <ThemedView key={plan.id} type="backgroundElement" style={styles.planCard}>
+                  <View style={styles.planHeader}>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {new Date(plan.createdAt).toLocaleString('tr-TR', {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}{' '}
+                      · {plan.season}
+                    </ThemedText>
+                    <Pressable hitSlop={8} onPress={() => handleDeletePlan(plan.id)}>
+                      <ThemedText style={styles.deleteGlyph}>🗑️</ThemedText>
+                    </Pressable>
+                  </View>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    👥 {plan.dancerCount} dansçı · 🚹 {plan.maleCount} · 🚺 {plan.femaleCount}
+                    {plan.unspecifiedGenderCount > 0 ? ` · ❔ ${plan.unspecifiedGenderCount}` : ''}
+                    {plan.avgHeight !== null ? ` · Ort. boy ${plan.avgHeight}cm` : ''}
+                  </ThemedText>
+                  {plan.venueName && (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      🏟️ {plan.venueName}
+                      {plan.fitsVenue !== null ? (plan.fitsVenue ? ' · ✅ yeterli' : ' · ⚠️ yetersiz') : ''}
+                    </ThemedText>
+                  )}
+                  {plan.note.length > 0 && <ThemedText style={styles.planNote}>{plan.note}</ThemedText>}
+                  {plan.rows.map((row) => (
+                    <ThemedText key={row.rowNumber} type="small" themeColor="textSecondary">
+                      {row.rowNumber}. Sıra: {row.summary}
+                    </ThemedText>
+                  ))}
+                </ThemedView>
+              ))}
+            </View>
           )}
         </View>
       </ScrollView>
@@ -484,6 +593,22 @@ const styles = StyleSheet.create({
   },
   rowNames: {
     flexShrink: 1,
+  },
+  planCard: {
+    gap: Spacing.half,
+    padding: Spacing.three,
+    borderRadius: Spacing.three,
+  },
+  planHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  deleteGlyph: {
+    fontSize: 14,
+  },
+  planNote: {
+    fontStyle: 'italic',
   },
   pressed: {
     opacity: 0.7,
