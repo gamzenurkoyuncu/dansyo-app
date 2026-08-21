@@ -40,6 +40,9 @@ export default function AppTabs() {
           <TabTrigger name="costumes" href="/costumes" asChild>
             <TabButton>Kostüm</TabButton>
           </TabTrigger>
+          <TabTrigger name="choreography" href="/choreography" asChild>
+            <TabButton>Koreografi</TabButton>
+          </TabTrigger>
           <TabTrigger name="settings" href="/settings" asChild>
             <TabButton>Ayarlar</TabButton>
           </TabTrigger>

@@ -3,6 +3,7 @@ import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useStat
 import { CostumeArchiveEntry, initialCostumeArchive } from '@/data/mock-costume-archive';
 import { Dancer, initialDancers } from '@/data/mock-dancers';
 import { initialPaymentRecords, PaymentRecord } from '@/data/mock-payments';
+import { initialVenues, Venue } from '@/data/mock-venues';
 import {
   AttendanceRecord,
   CURRENT_SEASON,
@@ -47,6 +48,8 @@ type AppDataContextValue = {
   setPaymentRecords: Dispatch<SetStateAction<PaymentRecord[]>>;
   costumeArchive: CostumeArchiveEntry[];
   setCostumeArchive: Dispatch<SetStateAction<CostumeArchiveEntry[]>>;
+  venues: Venue[];
+  setVenues: Dispatch<SetStateAction<Venue[]>>;
 };
 
 const AppDataContext = createContext<AppDataContextValue | null>(null);
@@ -67,6 +70,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [paymentRecords, setPaymentRecords] = useState<PaymentRecord[]>(initialPaymentRecords);
   const [costumeArchive, setCostumeArchive] =
     useState<CostumeArchiveEntry[]>(initialCostumeArchive);
+  const [venues, setVenues] = useState<Venue[]>(initialVenues);
 
   return (
     <AppDataContext
@@ -95,6 +99,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setPaymentRecords,
         costumeArchive,
         setCostumeArchive,
+        venues,
+        setVenues,
       }}>
       {children}
     </AppDataContext>

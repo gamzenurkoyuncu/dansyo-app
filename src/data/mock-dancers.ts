@@ -1,3 +1,5 @@
+export type Gender = 'Erkek' | 'Kız';
+
 export type Dancer = {
   id: string;
   firstName: string;
@@ -10,6 +12,7 @@ export type Dancer = {
   height: string; // cm, opsiyonel serbest metin
   weight: string; // kg, opsiyonel serbest metin
   costumeSize: string; // opsiyonel serbest metin, örn. 'S', '8 Yaş'
+  gender?: Gender;
 };
 
 export const initialDancers: Dancer[] = [

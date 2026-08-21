@@ -17,7 +17,7 @@ import { getAccentColor } from '@/components/team-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { Dancer, formatTurkishDate, getAge } from '@/data/mock-dancers';
+import { Dancer, formatTurkishDate, Gender, getAge } from '@/data/mock-dancers';
 import { formatTurkishMonth, getPaymentsForDancer } from '@/data/mock-payments';
 import {
   getAttendanceForDancer,
@@ -92,6 +92,7 @@ export default function DancersScreen() {
   const [heightInput, setHeightInput] = useState('');
   const [weightInput, setWeightInput] = useState('');
   const [costumeSizeInput, setCostumeSizeInput] = useState('');
+  const [genderInput, setGenderInput] = useState<Gender | null>(null);
 
   const [deletingDancer, setDeletingDancer] = useState<Dancer | null>(null);
   const [profileDancerId, setProfileDancerId] = useState<string | null>(null);
@@ -170,6 +171,7 @@ export default function DancersScreen() {
     setHeightInput('');
     setWeightInput('');
     setCostumeSizeInput('');
+    setGenderInput(null);
     setFormVisible(true);
   }
 
@@ -185,6 +187,7 @@ export default function DancersScreen() {
     setHeightInput(dancer.height);
     setWeightInput(dancer.weight);
     setCostumeSizeInput(dancer.costumeSize);
+    setGenderInput(dancer.gender ?? null);
     setFormVisible(true);
   }
 
@@ -211,6 +214,7 @@ export default function DancersScreen() {
                 height: heightInput.trim(),
                 weight: weightInput.trim(),
                 costumeSize: costumeSizeInput.trim(),
+                gender: genderInput ?? undefined,
               }
             : dancer,
         ),
@@ -228,6 +232,7 @@ export default function DancersScreen() {
         height: heightInput.trim(),
         weight: weightInput.trim(),
         costumeSize: costumeSizeInput.trim(),
+        gender: genderInput ?? undefined,
       };
       setDancers((prev) => [...prev, newDancer]);
     }
@@ -579,6 +584,30 @@ export default function DancersScreen() {
                 placeholderTextColor={theme.textSecondary}
                 style={[styles.input, { color: theme.text, borderColor: theme.backgroundSelected }]}
               />
+            </View>
+
+            <View style={styles.field}>
+              <ThemedText type="small" themeColor="textSecondary">
+                🚻 Cinsiyet (opsiyonel)
+              </ThemedText>
+              <View style={styles.genderChipRow}>
+                {(['Erkek', 'Kız'] as Gender[]).map((gender) => {
+                  const isSelected = genderInput === gender;
+                  return (
+                    <Pressable
+                      key={gender}
+                      onPress={() => setGenderInput(isSelected ? null : gender)}>
+                      <View style={[styles.viewModeChip, isSelected && styles.viewModeChipSelected]}>
+                        <ThemedText
+                          type="small"
+                          style={isSelected ? styles.viewModeChipSelectedText : undefined}>
+                          {gender}
+                        </ThemedText>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
 
             <View style={styles.field}>
@@ -1000,6 +1029,10 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   viewModeRow: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+  genderChipRow: {
     flexDirection: 'row',
     gap: Spacing.one,
   },

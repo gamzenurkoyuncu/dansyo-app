@@ -45,6 +45,11 @@ export default function AppTabs() {
         <NativeTabs.Trigger.Icon sf="tshirt.fill" />
       </NativeTabs.Trigger>
 
+      <NativeTabs.Trigger name="choreography">
+        <NativeTabs.Trigger.Label>Koreografi</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="figure.dance" />
+      </NativeTabs.Trigger>
+
       <NativeTabs.Trigger name="settings">
         <NativeTabs.Trigger.Label>Ayarlar</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="gearshape.fill" />

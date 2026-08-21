@@ -206,6 +206,13 @@ export default function HomeScreen() {
             subtitle="Boy, kilo, beden bilgisi"
           />
 
+          <QuickLinkCard
+            href="/choreography"
+            emoji="🩰"
+            title="Koreografi Planlama"
+            subtitle="Sahne uygunluğu, sıra düzeni"
+          />
+
           <QuickLinkCard href="/settings" emoji="⚙️" title="Ayarlar" subtitle="Görünüm tercihleri" />
         </View>
       </View>
